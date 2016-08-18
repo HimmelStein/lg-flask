@@ -4,6 +4,7 @@ import os
 from nltk.parse.stanford import StanfordParser
 from nltk.parse.stanford import StanfordDependencyParser
 from nltk.tokenize.stanford_segmenter import StanfordSegmenter
+from subprocess import Popen, PIPE
 
 os.environ['STANFORD_PARSER'] = 'stanford-parser.jar'
 os.environ['STANFORD_MODELS'] = 'stanford-parser-3.6.0-models.jar'
@@ -28,25 +29,58 @@ dep_parser_de = StanfordDependencyParser(model_path = model_de_path)
 dep_parser_cn = StanfordDependencyParser(model_path = model_cn_path)
 
 
-def get_dep_str(snt, lan='en'):
+def get_dep_str(snt, lan='en', ch_parser = 'hit', de_parser='parzu'):
     """
+    for german sentence, we use parzu, which is much better than stanford parser
+    for chinese sentence, we use hit.
     :param snt: a string of sentence
     :param lan: 'de','en','ch'
     :return: string in conll(10) format
     """
     if lan == 'ch':
-        ch_seg_snt = segmenter.segment(snt)
-        result = dep_parser_cn.raw_parse(ch_seg_snt)
-        dep = next(result)
-        return dep.to_conll(10)
+        if ch_parser == 'hit':
+            import urllib.request
+            import urllib.parse
+            from urllib.request import urlopen
+            from urllib.parse import quote
+            url_get_base = "http://api.ltp-cloud.com/analysis/?"
+            api_key = "74x4c7F3JiRepP6isevdShbXmhrLJE8RJWvnsZPy"
+            format = "conll"
+            pattern = "dp"
+            url = url_get_base + 'api_key=' + api_key + '&text=' + quote(
+                snt) + '&format=' + format + '&pattern=' + pattern
+            req = urllib.request.Request(url)
+            with urllib.request.urlopen(req) as response:
+                content = ''
+                for line in response:
+                    line = line.decode('utf8')  # Decoding the binary data to text.
+                    content = content + line
+            return content
+        else:
+            ch_seg_snt = segmenter.segment(snt)
+            result = dep_parser_cn.raw_parse(ch_seg_snt)
+            dep = next(result)
+            return dep.to_conll(10)
     elif lan == 'en':
-        result = dep_parser_en.raw_parse(en_snt)
+        result = dep_parser_en.raw_parse(snt)
         dep = next(result)
         return dep.to_conll(10)
     elif lan == 'de':
-        result = dep_parser_de.raw_parse(de_snt)
-        dep = next(result)
-        return dep.to_conll(10)
+        if de_parser == 'parzu':
+            #parzu_command = 'echo "' + snt + '"| /Users/tdong/components/ParZu/parzu > parzu_rlt.txt'
+            #os.system(parzu_command)
+            #with open('parzu_rlt.txt', 'r') as myfile:
+            #    data = myfile.read()
+            #    return data
+            echo_process = Popen(['echo', snt], stdout=PIPE)
+            parzu_process = Popen(['/Users/tdong/components/ParZu/parzu'], stdin=echo_process.stdout, stdout=PIPE)
+            echo_process.stdout.close()
+            out, err = parzu_process.communicate()
+            return out.decode("utf-8")
+        else:
+            result = dep_parser_de.raw_parse(snt)
+            dep = next(result)
+            return dep.to_conll(10)
     else:
         print('Usage: <sentence>, lan="en" or "de" or "ch"')
 
@@ -79,9 +113,13 @@ def test_parser():
 if __name__ == "__main__":
     str_ch1 = '国务院总理今天出访美国'
     str_ch2 = '中国对赢了'
+    str_de1 = 'Jenes Mädchen ist sehr hübsch.'
+    str_en1 = 'In other words, counterfactual thinking influences how satisfied each athlete feels.'
     dep_str = get_dep_str(str_ch1, lan='ch')
     print(dep_str)
-    dep_str = get_dep_str(str_ch2, lan='ch')
+    dep_str = get_dep_str(str_en1, lan='en')
+    print(dep_str)
+    dep_str = get_dep_str(str_de1, lan='de')
     print(dep_str)
 
 

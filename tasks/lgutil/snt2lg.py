@@ -76,7 +76,7 @@ def get_chinese_language_dependency_graph(snt):
     from urllib.parse import quote
     url_get_base = "http://api.ltp-cloud.com/analysis/?"
     api_key = "74x4c7F3JiRepP6isevdShbXmhrLJE8RJWvnsZPy"
-    format = "json"
+    format = "conll"
     pattern = "dp"
     url = url_get_base+'api_key='+api_key+'&text='+quote(snt)+'&format='+format+'&pattern='+pattern
     req = urllib.request.Request(url)
