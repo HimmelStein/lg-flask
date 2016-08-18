@@ -1,5 +1,5 @@
 import os
-from flask import Flask
+from flask import Flask, render_template
 from flask.ext.sqlalchemy import SQLAlchemy
 
 
@@ -11,9 +11,9 @@ db = SQLAlchemy(app)
 from models import ChBible
 
 
-@app.route('/')
-def hello():
-    return "Hello World!"
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    return render_template('index.html')
 
 if __name__ == '__main__':
     app.run(debug=True)
