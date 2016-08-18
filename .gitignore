@@ -8,13 +8,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-tasks/lgutil/edu
-tasks/lgutil/extools
-tasks/lgutil/stanford-parser-full-2015-12-09
-tasks/lgutil/stanford-postagger-full-2015-12-09
-tasks/lgutil/stanford-segmenter-2015-12-09
 env/
-data/
 build/
 develop-eggs/
 dist/
@@ -61,6 +55,16 @@ env/*
 # virtualenv
 venv/
 ENV/
+
+# external tools
+tasks/lgutil/edu
+tasks/lgutil/extools
+tasks/lgutil/stanford-parser-full-2015-12-09
+tasks/lgutil/stanford-postagger-full-2015-12-09
+tasks/lgutil/stanford-segmenter-2015-12-09
+
+# large dataset
+data/
 
 # IDE files
 .idea/
