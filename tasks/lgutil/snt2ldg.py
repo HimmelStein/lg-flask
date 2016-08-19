@@ -8,16 +8,17 @@ from subprocess import Popen, PIPE
 
 os.environ['STANFORD_PARSER'] = 'stanford-parser.jar'
 os.environ['STANFORD_MODELS'] = 'stanford-parser-3.6.0-models.jar'
+util_loc = "/Users/tdong/git/lg-flask/tasks/lgutil"
 
-model_en_path = "edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz"
-model_de_path = "edu/stanford/nlp/models/lexparser/germanPCFG.ser.gz"
-model_cn_path = "edu/stanford/nlp/models/lexparser/chinesePCFG.ser.gz"
-model_ch_lex_path = "edu/stanford/nlp/models/lexparser/chineseFactored.ser.gz"
+model_en_path = os.path.join(util_loc,"edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz")
+model_de_path = os.path.join(util_loc,"edu/stanford/nlp/models/lexparser/germanPCFG.ser.gz")
+model_cn_path = os.path.join(util_loc,"edu/stanford/nlp/models/lexparser/chinesePCFG.ser.gz")
+model_ch_lex_path =os.path.join(util_loc, "edu/stanford/nlp/models/lexparser/chineseFactored.ser.gz")
 
-segmenter = StanfordSegmenter(path_to_jar="extools/stanford-segmenter.jar",
-                              path_to_sihan_corpora_dict="stanford-segmenter-2015-12-09/data",
-                              path_to_model="stanford-segmenter-2015-12-09/data/pku.gz",
-                              path_to_dict="stanford-segmenter-2015-12-09/data/dict-chris6.ser.gz")
+segmenter = StanfordSegmenter(path_to_jar=os.path.join(util_loc,"extools/stanford-segmenter.jar"),
+                              path_to_sihan_corpora_dict=os.path.join(util_loc,"stanford-segmenter-2015-12-09/data"),
+                              path_to_model=os.path.join(util_loc,"stanford-segmenter-2015-12-09/data/pku.gz"),
+                              path_to_dict=os.path.join(util_loc,"stanford-segmenter-2015-12-09/data/dict-chris6.ser.gz"))
 
 #parser_en = StanfordParser(model_path = model_en_path)
 #parser_de = StanfordParser(model_path = model_de_path)
@@ -67,13 +68,9 @@ def get_dep_str(snt, lan='en', ch_parser = 'hit', de_parser='parzu'):
         return dep.to_conll(10)
     elif lan == 'de':
         if de_parser == 'parzu':
-            #parzu_command = 'echo "' + snt + '"| /Users/tdong/components/ParZu/parzu > parzu_rlt.txt'
-            #os.system(parzu_command)
-            #with open('parzu_rlt.txt', 'r') as myfile:
-            #    data = myfile.read()
-            #    return data
             echo_process = Popen(['echo', snt], stdout=PIPE)
-            parzu_process = Popen(['/Users/tdong/components/ParZu/parzu'], stdin=echo_process.stdout, stdout=PIPE)
+            parzu_process = Popen(['/Users/tdong/components/ParZu/parzu'],
+                                  stdin=echo_process.stdout, stdout=PIPE)
             echo_process.stdout.close()
             out, err = parzu_process.communicate()
             return out.decode("utf-8")
