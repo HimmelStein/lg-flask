@@ -140,9 +140,7 @@ def insert_2snt_into_db_table(db='language_graph', dbuser='postgres', table='ldc
         ch_snt = ch_snt.replace("'", "\'")
         en_snt = en_snt.replace("'", "''")
         sql_str = "INSERT INTO " + table + "(id, fname, en_sub,  seg_id, ch_snt, en_snt) VALUES({0}, '{1}', '{2}', {3}, '{4}', '{5}')".format(id, fname, en_sub, seg_id, ch_snt, en_snt)
-        #sql_str = "INSERT INTO " + table + "(id, fname, en_sub,  seg_id, ch_snt, en_snt)"
         print(sql_str)
-        #data = (id, fname, en_sub, seg_id, ch_snt, en_snt)
         cur.execute(sql_str)
         con.commit()
     except psycopg2.DatabaseError:
@@ -243,6 +241,166 @@ def insert_lg_into_table(fname, lan='', encode='utf-8', db='language_graph', dbu
         if con:
             con.close()
 
+
+def copy_sqlite_table_into_postgres():
+    """
+    load snt table into postgres
+    :return:
+    """
+    try:
+        con = psycopg2.connect(host='localhost', database="language_graph", user="postgres")
+        print('connecting postgre')
+        cur = con.cursor()
+        import sqlite3
+        conn_sqlite = sqlite3.connect(os.path.join(project_loc, 'PONS.db'))
+        c_sqlite = conn_sqlite.cursor()
+        for row in c_sqlite.execute("SELECT * FROM snt"):
+            print(row)
+            id = row[0]
+            ch_snt = row[2]
+            de_snt = row[1]
+            sql_str = "INSERT INTO pons (id, ch_snt, de_snt) VALUES({0}, '{1}', '{2}')".format(id,  ch_snt, de_snt)
+            print(sql_str)
+            cur.execute(sql_str)
+        con.commit()
+    except psycopg2.DatabaseError:
+        if con:
+            con.rollback()
+        print('Error %s' % psycopg2.DatabaseError)
+        sys.exit(1)
+    finally:
+        if con:
+            con.close()
+
+
+#
+# load LDG to three tables
+#
+def load_ldg_into_table(lan=''):
+    """
+    table 1: chbible: id | bbid | snt | snt_lg | snt_sdg
+    table 2: debible: id | bbid | snt | snt_lg | snt_sdg
+    table 3: enbible: id | bbid | snt | snt_lg | snt_sdg
+    table 4: pons:    id | ch_snt | de_snt | ch_ldg | ch_sdg | de_ldg | de_sdg
+    table 5: ldc2002t01: id | fname | en_sub | ch_snt | en_snt | seg_id | ch_ldg | ch_sdg | en_ldg | en_sdg
+    :param lan:
+    :return:
+    """
+    batch_lst =[
+        #{"lan": "de",  "table": "pons",  "snt": "de_snt",  "ldg": "de_ldg"},
+        {"lan": "ch", "table": "pons", "snt": "ch_snt", "ldg": "ch_ldg"},
+        {"lan": "ch",  "table": "ldc2002t01",  "snt": "ch_snt",  "ldg": "ch_ldg"},
+        #{"lan": "en",  "table": "ldc2002t01", "snt": "en_snt",  "ldg": "en_ldg"},
+        #{"lan": "de", "table": "debible", "snt": "snt", "ldg": "snt_lg"},
+        #{"lan": "ch", "table": "chbible", "snt": "snt", "ldg": "snt_lg"},
+        #{"lan": "en", "table": "enbible", "snt": "snt", "ldg": "snt_lg"},
+        ]
+    try:
+        con = psycopg2.connect(host='localhost', database="language_graph", user="postgres")
+        print('connecting postgre')
+        cur = con.cursor()
+        for dic in batch_lst:
+            lan = dic['lan']
+            table = dic['table']
+            snt = dic['snt']
+            ldg_col = dic['ldg']
+            cur.execute("SELECT id," + snt +", "+ldg_col+ " FROM "+ table )
+            rows = cur.fetchall()
+            for row in rows:
+                print(type(row[2]))
+                if row[2] is None or row[2] == '':
+                    id = row[0]
+                    print(row[1])
+                    ldg = snt2ldg.get_dep_str(row[1],lan=lan).replace('\t', ' ').replace('\n', ' * ').replace("'", "''")
+                    print(dic, row)
+                    print(ldg)
+                    sql_str = """update {0} set {1} = '{2}' where id = {3}""".format(table, ldg_col, ldg, id)
+                    print(sql_str)
+                    cur.execute(sql_str)
+                    con.commit()
+    except psycopg2.DatabaseError:
+        if con:
+            con.rollback()
+        print('Error %s' % psycopg2.DatabaseError)
+        sys.exit(1)
+    finally:
+        if con:
+            con.close()
+
+
+def load_bible_ldg_into_table():
+        """
+        table 1: chbible: id | bbid | snt | snt_lg | snt_sdg
+        table 2: debible: id | bbid | snt | snt_lg | snt_sdg
+        table 3: enbible: id | bbid | snt | snt_lg | snt_sdg
+        do in parallel
+        :param lan:
+        :return:
+        """
+        batch_lst = [
+            {"lan": "ch", "table": "chbible", "snt": "snt", "ldg": "snt_lg"},
+            {"lan": "de", "table": "debible", "snt": "snt", "ldg": "snt_lg"},
+            {"lan": "en", "table": "enbible", "snt": "snt", "ldg": "snt_lg"}
+        ]
+        try:
+            con = psycopg2.connect(host='localhost', database="language_graph", user="postgres")
+            print('connecting postgre')
+            cur_ch = con.cursor()
+            cur_en = con.cursor()
+            cur_de = con.cursor()
+
+            ch_lan = batch_lst[0]['lan']
+            de_lan = batch_lst[1]['lan']
+            en_lan = batch_lst[2]['lan']
+            ch_table = batch_lst[0]['table']
+            de_table = batch_lst[1]['table']
+            en_table = batch_lst[2]['table']
+            snt = batch_lst[0]['snt']
+            ldg_col = batch_lst[0]['ldg']
+
+            cur_ch.execute("SELECT id," + snt + ", " + ldg_col+ " FROM " + ch_table )
+            ch_rows = cur_ch.fetchall()
+            cur_de.execute("SELECT id," + snt + ", " + ldg_col+ " FROM " + de_table)
+            de_rows = cur_de.fetchall()
+            cur_en.execute("SELECT id," + snt + ", " + ldg_col+ " FROM " + en_table)
+            en_rows = cur_en.fetchall()
+
+            for i in range(len(ch_rows)):
+                print(i,ch_rows[i])
+                id = ch_rows[i][0]
+                if ch_rows[i][2] is None:
+                    ldg_ch = snt2ldg.get_dep_str(ch_rows[i][1], lan=ch_lan, ch_parser='stanford').replace('\t', ' ').replace("'", "''")
+                    sql_str = """UPDATE {0} SET {1} = '{2}' WHERE id = {3}""".format(ch_table, ldg_col, ldg_ch, id)
+                    print(sql_str)
+                    cur_ch.execute(sql_str)
+
+                id = de_rows[i][0]
+                print(i, de_rows[i][0])
+                if de_rows[i][2] is None:
+                    ldg_de = snt2ldg.get_dep_str(de_rows[i][1], lan=de_lan).replace('\t', ' ').replace('\n', ' * ').replace("'", "''")
+                    sql_str = """UPDATE {0} SET {1} = '{2}' WHERE id = {3}""".format(de_table, ldg_col, ldg_de, id)
+                    print(sql_str)
+                    cur_de.execute(sql_str)
+
+                id = en_rows[i][0]
+                print(i, en_rows[i][0])
+                if en_rows[i][2] is None:
+                    ldg_en = snt2ldg.get_dep_str(en_rows[i][1], lan=en_lan).replace('\t', ' ').replace('\n', ' * ').replace("'", "''")
+                    sql_str = """UPDATE {0} SET {1} = '{2}' WHERE id = {3}""".format(en_table, ldg_col, ldg_en, id)
+                    print(sql_str)
+                    cur_en.execute(sql_str)
+
+                con.commit()
+        except psycopg2.DatabaseError:
+            if con:
+                con.rollback()
+                print('Error %s' % psycopg2.DatabaseError)
+                sys.exit(1)
+        finally:
+            if con:
+                con.close()
+
+
 #
 # Postgres SQL
 # SELECT table_schema,table_name FROM information_schema.tables where table_schema='public'
@@ -256,5 +414,7 @@ if __name__ == "__main__":
     #insert_snt_into_db_table(chinese_train_file, encode='gb2312',  table='chbible')
     #insert_snt_into_db_table(english_train_file,   table='enbible')
     #insert_snt_into_db_table(german_train_file, encode='ISO-8859-1', table='debible')
-    load_ldc_into_database(ldc=LDC2002T01_loc, ch_loc=ch_loc, en_loc=en_loc, en_sub=en_sub)
-
+    #load_ldc_into_database(ldc=LDC2002T01_loc, ch_loc=ch_loc, en_loc=en_loc, en_sub=en_sub)
+    #copy_sqlite_table_into_postgres()
+    load_ldg_into_table()
+    #load_bible_ldg_into_table()

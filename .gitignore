@@ -68,3 +68,6 @@ data/
 
 # IDE files
 .idea/
+
+# xx
+*.html

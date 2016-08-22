@@ -25,10 +25,92 @@ nav .btn-group {
         position: absolute;
         top: 0;
         right: 4em;
-    } }
+    }
+}
+
+nav form#search-chinese {
+    float: right;
+    padding: 0.5em;
+}
+nav form#search-chinese .glyphicon-search {
+    z-index: 99;
+    position: absolute;
+    right: 0.7em;
+    top: 50%;
+    margin-top: -0.44em;
+}
+nav form#search-chinese .input-group .form-control {
+    border-radius: 0.25em;
+}
+
+nav form#search-german {
+    float: right;
+    padding: 0.5em;
+}
+nav form#search-german .glyphicon-search {
+    z-index: 99;
+    position: absolute;
+    right: 0.7em;
+    top: 50%;
+    margin-top: -0.44em;
+}
+nav form#search-german .input-group .form-control {
+    border-radius: 0.25em;
+}
+
+nav form#search-en {
+    float: right;
+    padding: 0.5em;
+}
+nav form#search-en .glyphicon-search {
+    z-index: 99;
+    position: absolute;
+    right: 0.7em;
+    top: 50%;
+    margin-top: -0.44em;
+}
+nav form#search-en .input-group .form-control {
+    border-radius: 0.25em;
+}
+
+#nav-options-ch {
+    margin: 0.5em;
+}
+#nav-options-ch button.thumbnail {
+    margin: 0;
+    padding: 0; }
+
+#nav-options-ch img {
+    max-height: 2.3em;
+    border-radius: 0.25em;
+}
+
+#nav-options-en {
+    margin: 0.5em;
+}
+#nav-options-en button.thumbnail {
+    margin: 0;
+    padding: 0; }
+
+#nav-options-en img {
+    max-height: 2.3em;
+    border-radius: 0.25em;
+}
+
+#nav-options-german {
+    margin: 0.5em;
+}
+#nav-options-german button.thumbnail {
+    margin: 0;
+    padding: 0; }
+
+#nav-options-german img {
+    max-height: 2.3em;
+    border-radius: 0.25em;
+}
 
 section#intro-header {
-    background-image: url(../static/background.jpg);
+    background-image: url(../background.jpg);
     background-size: cover;
 }
 
@@ -75,11 +157,7 @@ section#features .feature {
     padding-bottom: 4rem;
     text-align: center;
 }
-section#features .feature {
-    padding-top: 2rem;
-    padding-bottom: 4rem;
-    text-align: center;
-}
+
 section#features .glyphicon {
     font-size: 2rem;
 }
@@ -206,4 +284,17 @@ section#team h5 {
 .wrapping-flex .item2 {
     align-self: center;
     height: 5rem;
+}
+
+.container-main {
+    margin-top: 75px;
+}
+
+.container-canvas {
+    margin: 0 auto;
+    width: 800px;
+}
+
+canvas {
+    border: 1px solid #333;
 }

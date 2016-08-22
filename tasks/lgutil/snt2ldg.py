@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import time
 from nltk.parse.stanford import StanfordParser
 from nltk.parse.stanford import StanfordDependencyParser
 from nltk.tokenize.stanford_segmenter import StanfordSegmenter
@@ -40,12 +41,14 @@ def get_dep_str(snt, lan='en', ch_parser = 'hit', de_parser='parzu'):
     """
     if lan == 'ch':
         if ch_parser == 'hit':
+            time.sleep(5)
             import urllib.request
             import urllib.parse
             from urllib.request import urlopen
             from urllib.parse import quote
             url_get_base = "http://api.ltp-cloud.com/analysis/?"
             api_key = "74x4c7F3JiRepP6isevdShbXmhrLJE8RJWvnsZPy"
+            #api_key = "47b7P5F0pQvs8b3MUSXAtAqu6pCZsXYKndEXoise"
             format = "conll"
             pattern = "dp"
             url = url_get_base + 'api_key=' + api_key + '&text=' + quote(
@@ -58,7 +61,10 @@ def get_dep_str(snt, lan='en', ch_parser = 'hit', de_parser='parzu'):
                     content = content + line
             return content
         else:
-            ch_seg_snt = segmenter.segment(snt)
+            snt = str(snt)
+            ch_seg_snt = segmenter.segment(snt).strip('\n').strip('。')
+            print(type(ch_seg_snt), '+'+ch_seg_snt+'+')
+            #ch_seg_snt = ch_seg_snt.encode(encoding='UTF-8')
             result = dep_parser_cn.raw_parse(ch_seg_snt)
             dep = next(result)
             return dep.to_conll(10)
@@ -109,14 +115,14 @@ def test_parser():
 
 if __name__ == "__main__":
     str_ch1 = '国务院总理今天出访美国'
-    str_ch2 = '中国对赢了'
+    str_ch2 = '他借了几本书。'
     str_de1 = 'Jenes Mädchen ist sehr hübsch.'
     str_en1 = 'In other words, counterfactual thinking influences how satisfied each athlete feels.'
-    dep_str = get_dep_str(str_ch1, lan='ch')
+    dep_str = get_dep_str(str_ch1, lan='ch', ch_parser='hit')
     print(dep_str)
-    dep_str = get_dep_str(str_en1, lan='en')
-    print(dep_str)
-    dep_str = get_dep_str(str_de1, lan='de')
-    print(dep_str)
+    #dep_str = get_dep_str(str_en1, lan='en')
+    #print(dep_str)
+    #dep_str = get_dep_str(str_de1, lan='de')
+    #print(dep_str)
 
 
