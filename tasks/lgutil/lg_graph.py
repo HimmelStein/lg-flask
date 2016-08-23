@@ -30,6 +30,9 @@ class LgGraph(DependencyGraph):
     def get_ldg(self):
         return self._ldg 
 
+    def set_conll(self, conllStr):
+        DependencyGraph.__init__(self, conllStr)
+
     def set_sample_snt_ldg_from_db(self, lan='', table='', num=-1):
         """
         get sample sentence and its language dependency graph from db
@@ -76,8 +79,6 @@ class LgGraph(DependencyGraph):
             if con:
                 con.close()
 
-
-
     def set_snt_from_user(self, snt='', lan=''):
         """
         get sentence from user
@@ -90,7 +91,10 @@ class LgGraph(DependencyGraph):
         self._snt = snt
 
     def ldg2json(self, snt='', ldg=''):
-        pass
+        dic = {}
+        for nodeId in self.nodes.keys():
+            dic[nodeId] = self.nodes[nodeId]
+        return dic
 
     def ldgjson2nx(self, snt='', ldg=''):
         pass
@@ -144,7 +148,6 @@ class LgGraph(DependencyGraph):
                     new_root['feature']['root'] = True
 
                     new_graph[0]['deps']['root'] = preds
-
             return new_graph
 
     def recover_link_verb(self):
