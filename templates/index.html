@@ -17,9 +17,9 @@
     <![endif]-->
 </head>
 <body>
-<nav class="navbar navbar-default navbar-fixed-top">
+<nav class="navbar navbar-inverse navbar-fixed-top">
     <div class="navbar-header">
-        <a class="navbar-brand" href="index.html">Language Graph</a>
+        <a class="navbar-brand" href="">Language Graph</a>
         <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#nav-menu" aria-expanded="false">
             <span class="sr-only">Toggle navigation</span>
             <span class="icon-bar"></span>
@@ -34,7 +34,7 @@
             <li><a href="#Chinese">Chinese</a></li>
             <li><a href="#English">English</a></li>
             <li><a href="#German">German</a></li>
-            <li><a href="contact.html">Contact</a></li>
+            <!--li><a href="contact.html">Contact</a></li-->
         </ul> </div>
 </nav>
 
@@ -81,6 +81,7 @@
 
 
 <section id="Chinese">
+    <p>&nbsp;</p><p></p><p>&nbsp;</p><p></p>
     <nav class="navbar navbar-default">
         <div class="navbar-header">
             <a class="navbar-brand">Chinese Language Graph</a>
@@ -88,6 +89,7 @@
                 <button type="button" class="btn btn-default dropdown-toggle thumbnail" data-toggle="dropdown" aria-haspopup="true"
                         aria-expanded="false">
                     <img src="static/dragen.png">
+
                 </button>
                 <ul class="dropdown-menu">
                     <li><a href="#Chinese">PONS</a></li>
@@ -95,11 +97,17 @@
                     <li role="separator" class="divider"></li>
                     <li><a href="#Chinese">Bible</a></li>
                 </ul>
+
+            </div>
+        </div>
+        <div class="form-group" style="display:inline;">
+            <div class="input-group have-top-margin-5 col-lg-6 col-md-5 col-sm-3 center-block col-xs-12">
+                <input id="input-chinese" class="form-control" type="text" placeholder="">
             </div>
         </div>
         <div id="nav-menu-chinese" class="collapse navbar-collapse navbar-right">
             <form id="search-chinese" role="search">
-                <div class="input-group">
+                <div class="input-group have-top-margin-1">
                     <input type="text" class="form-control col-md-10"
                            placeholder=" 他是一位导演">
                     <span class="glyphicon glyphicon-search"></span>
@@ -118,6 +126,7 @@
 </section>
 
 <section id="German">
+    <p>&nbsp;</p><p></p><p>&nbsp;</p><p></p>
     <nav class="navbar navbar-default">
         <div class="navbar-header">
             <a class="navbar-brand">German Language Graph</a>
@@ -127,17 +136,22 @@
                     <img src="static/german.jpg">
                 </button>
                 <ul class="dropdown-menu">
-                    <li><a href="#Chinese">PONS</a></li>
-                    <li><a href="#Chinese">LDC2002T01</a></li>
+                    <li><a href="#German">PONS</a></li>
+                    <!--li><a href="#German">LDC2002T01</a></li-->
                     <li role="separator" class="divider"></li>
-                    <li><a href="#Chinese">Bible</a></li>
+                    <li><a href="#German">Bible</a></li>
                 </ul>
+            </div>
+        </div>
+        <div class="form-group" style="display:inline;">
+            <div class="input-group have-top-margin-5 col-lg-6 col-md-5 col-sm-3 center-block col-xs-12">
+                <input id="input-german" class="form-control" type="text" placeholder="">
             </div>
         </div>
         <div id="nav-menu-german" class="collapse navbar-collapse navbar-right">
             <form id="search-german" role="search">
-                <div class="input-group">
-                    <input type="text" class="form-control col-md-10"
+                <div class="input-group have-top-margin-1">
+                    <input type="text" class="form-control  col-md-10"
                            placeholder="Er ist ein Regisseur">
                     <span class="glyphicon glyphicon-search"></span>
                 </div>
@@ -155,27 +169,33 @@
 </section>
 
 <section id="English">
+    <p>&nbsp;</p><p></p><p>&nbsp;</p><p></p>
     <nav class="navbar navbar-default">
         <div class="navbar-header">
-            <a class="navbar-brand">German Language Graph</a>
+            <a class="navbar-brand">English Language Graph</a>
             <div id="nav-options-en" class="btn-group pull-right">
                 <button type="button" class="btn btn-default dropdown-toggle thumbnail" data-toggle="dropdown" aria-haspopup="true"
                         aria-expanded="false">
                     <img src="static/usa.jpg">
                 </button>
                 <ul class="dropdown-menu">
-                    <li><a href="#Chinese">PONS</a></li>
-                    <li><a href="#Chinese">LDC2002T01</a></li>
+                    <!--li><a href="#English">PONS</a></li-->
+                    <li><a href="#English">LDC2002T01</a></li>
                     <li role="separator" class="divider"></li>
-                    <li><a href="#Chinese">Bible</a></li>
+                    <li><a href="#English">Bible</a></li>
                 </ul>
+            </div>
+        </div>
+        <div class="form-group" style="display:inline;">
+            <div class="input-group have-top-margin-5 col-lg-6 col-md-5 col-sm-3 center-block col-xs-12">
+                <input id="input-english" class="form-control" type="text" placeholder="">
             </div>
         </div>
         <div id="nav-menu-en" class="collapse navbar-collapse navbar-right">
             <form id="search-en" role="search">
-                <div class="input-group">
+                <div class="input-group have-top-margin-1">
                     <input type="text" class="form-control col-md-10"
-                           placeholder="At the first God made the heaven and the earth. ">
+                           placeholder="At the first God ... ">
                     <span class="glyphicon glyphicon-search"></span>
                 </div>
             </form>

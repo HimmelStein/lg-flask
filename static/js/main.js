@@ -2,17 +2,22 @@
  * Created by tdong on 22.08.16.
  */
 
-$(function(){
+
+
+$(document).ready(function() {
+    draw("ch_canvas");
+    draw("de_canvas");
+    draw("en_canvas");
 
     $(".dropdown-menu li a").click(function(){
 
-        $(".btn:first-child").text($(this).text());
-        $(".btn:first-child").val($(this).text());
+       // $(".btn:first-child").text($(this).text());
+       // $(".btn:first-child").val($(this).text());
 
     });
 
-});
-
+})
+ 
 function draw(where) {
     var canvas = document.getElementById(where);
 
@@ -28,9 +33,3 @@ function draw(where) {
         alert("Canvas isn't supported.");
     }
 }
-
-$(function() {
-    draw("ch_canvas");
-    draw("de_canvas");
-    draw("en_canvas");
-});

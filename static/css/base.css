@@ -73,6 +73,29 @@ nav form#search-en .input-group .form-control {
     border-radius: 0.25em;
 }
 
+.navbar-center
+{
+    position: absolute;
+    width: 100%;
+    left: 0;
+    text-align: center;
+    margin: auto;
+}
+
+.have-top-margin-5{
+    margin-top: 0.5em;
+    float:none;
+}
+
+.have-top-margin-1{
+    margin-top: -0.6em;
+    float:none;
+}
+
+.navbar-sub{
+    background-color: #3EC6E0;
+}
+
 #nav-options-ch {
     margin: 0.5em;
 }
