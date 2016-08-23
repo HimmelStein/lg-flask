@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Deep Graph Net</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/joint.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/vis.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <!--[if lt IE 9]>
     <script
@@ -92,7 +92,7 @@
             <div id="nav-options-ch" class="btn-group pull-right">
                 <button type="button" class="btn btn-default dropdown-toggle thumbnail" data-toggle="dropdown" aria-haspopup="true"
                         aria-expanded="false">
-                    <img src="static/images/dragen.png">
+                    <img src="static/img/dragen.png">
                 </button>
                 <ul class="dropdown-menu">
                     <li><a href="#Chinese">PONS</a></li>
@@ -123,8 +123,20 @@
         <div class="row">
             <div class="wrap-headline">
                 <div id="ch-canvas">
-
-
+                <div class="vis-network" style="position: relative; overflow: hidden;
+                        -moz-user-select: none; width: 100%; height: 100%;" tabindex="900">
+                    <canvas style="position: relative; -moz-user-select: none; width: 100%;
+                        height: 100%;" width="1200" height="1200"></canvas>
+                    <div class="vis-navigation">
+                        <div class="vis-button vis-up" style="-moz-user-select: none;"></div>
+                        <div class="vis-button vis-down" style="-moz-user-select: none;"></div>
+                        <div class="vis-button vis-left" style="-moz-user-select: none;"></div>
+                        <div class="vis-button vis-right" style="-moz-user-select: none;"></div>
+                        <div class="vis-button vis-zoomIn" style="-moz-user-select: none;"></div>
+                        <div class="vis-button vis-zoomOut" style="-moz-user-select: none;"></div>
+                        <div class="vis-button vis-zoomExtends" style="-moz-user-select: none;"></div>
+                    </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -139,7 +151,7 @@
             <div id="nav-options-german" class="btn-group pull-right">
                 <button type="button" class="btn btn-default dropdown-toggle thumbnail" data-toggle="dropdown" aria-haspopup="true"
                         aria-expanded="false">
-                    <img src="static/images/german.jpg">
+                    <img src="static/img/german.jpg">
                 </button>
                 <ul class="dropdown-menu">
                     <li><a href="#German">PONS</a></li>
@@ -186,7 +198,7 @@
             <div id="nav-options-en" class="btn-group pull-right">
                 <button type="button" class="btn btn-default dropdown-toggle thumbnail" data-toggle="dropdown" aria-haspopup="true"
                         aria-expanded="false">
-                    <img src="static/images/usa.jpg">
+                    <img src="static/img/usa.jpg">
                 </button>
                 <ul class="dropdown-menu">
                     <!--li><a href="#English">PONS</a></li-->
@@ -269,19 +281,17 @@
     </div>
 </footer>
 
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <script src="{{ url_for('static', filename='js/d3.5.17.min.js') }}"></script>
-<script src="{{ url_for('static', filename='js/jsnetworkx.js') }}"></script>
 <!--script src="https://d3js.org/d3.v4.min.js"></script>
 <!--script src="http://mpld3.github.io/js/mpld3.v0.1.js"></script-->
 <script src="{{ url_for('static', filename='js/vis.js') }}"></script>
 <script src="{{ url_for('static', filename='js/lodash.min.js') }}"></script>
 <script src="{{ url_for('static', filename='js/backbone.min.js') }}"></script>
-<script src="{{ url_for('static', filename='js/joint.js') }}"></script>
 <script src="{{ url_for('static', filename='js/tether.min.js') }}"></script>
 <script src="{{ url_for('static', filename='js/jquery-2.2.0.js') }}"></script>
 <script src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
-
+<script src="{{ url_for('static', filename='js/googleAnalytics.js') }}"></script>
+<script src="{{ url_for('static', filename='js/exampleUtil.js') }}"></script>
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 

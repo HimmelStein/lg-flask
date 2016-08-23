@@ -21,6 +21,8 @@ $(document).ready(function() {
             var ch_net = ask_for_ch_ldg_net(ch_txt)
         };
     });
+
+
 })
 
 
@@ -34,7 +36,7 @@ function ask_for_ch_ldg_net(ch_txt) {
             },
         success: function(data) {
             console.log(data);
-            vis_dep(data, 'ch-canvas');
+            vis_dep(data, 'ch-canvas'); 
             },
         error: function(jqXHR, textStatus, errorThrown) {
             alert(errorThrown);
@@ -61,7 +63,7 @@ function vis_dep(depJson, loc) {
                 for (var toId in value['deps'][rel]){
                     var edge0 = {};
                     edge0['from'] = -1;
-                    edge0['to'] = toId;
+                    edge0['to'] = value['deps'][rel][toId];
                     edge0['arrows'] = 'to';
                     edge0["label"] = 'root';
                     edge0["color"] = '#ff00ff';
@@ -88,16 +90,174 @@ function vis_dep(depJson, loc) {
     var nodes = new vis.DataSet(vis_nodes0),
 		// create an array with edges
         edges = new vis.DataSet(vis_edges0),
-                             // create a network
+        // create a network
         container = document.getElementById(loc),
         data = {
 				nodes: nodes,
 				edges: edges
              	},
-		options = {interaction:{hover:true}},
+		options = {
+            interaction:{
+                        navigationButtons: true,
+                        keyboard: true}
+
+        },
+
 		network = new vis.Network(container, data, options);
 }
 
+
+function test_arrow(){
+    var nodes = null;
+    var edges = null;
+    var network = null;
+
+    function destroy() {
+      if (network !== null) {
+        network.destroy();
+        network = null;
+      }
+    }
+
+
+      destroy();
+
+      // create an array with nodes
+      var nodes = [
+        {id: 1, label: 'Node 1'},
+        {id: 2, label: 'Node 2'},
+        {id: 3, label: 'Node 3'},
+        {id: 4, label: 'Node 4'},
+        {id: 5, label: 'Node 5'}
+      ];
+
+      // create an array with edges
+      var edges = new vis.DataSet([
+        {from: 1, to: 3},
+        {from: 1, to: 2},
+        {from: 2, to: 4},
+        {from: 2, to: 5}
+      ]);
+
+      // create a network
+      var container = document.getElementById('ch-canvas');
+      var data = {
+        nodes: nodes,
+        edges: edges
+      };
+      var options = {
+        interaction: {
+          navigationButtons: true,
+          keyboard: true
+        }
+      };
+      network = new vis.Network(container, data, options);
+
+      // add event listeners
+      network.on('select', function(params) {
+        document.getElementById('selection').innerHTML = 'Selection: ' + params.nodes;
+      });
+
+}
+
+function test_vis_her(){
+     // create an array with nodes
+  var nodes = [
+    {id: 1,  label: 'Node 1', color:'orange'},
+    {id: 2,  label: 'Node 2', color:'DarkViolet', font:{color:'white'}},
+    {id: 3,  label: 'Node 3', color:'orange'},
+    {id: 4,  label: 'Node 4', color:'DarkViolet', font:{color:'white'}},
+    {id: 5,  label: 'Node 5', color:'orange'},
+    {id: 6,  label: 'cid = 1', cid:1, color:'orange'},
+    {id: 7,  label: 'cid = 1', cid:1, color:'DarkViolet', font:{color:'white'}},
+    {id: 8,  label: 'cid = 1', cid:1, color:'lime'},
+    {id: 9,  label: 'cid = 1', cid:1, color:'orange'},
+    {id: 10, label: 'cid = 1', cid:1, color:'lime'}
+  ];
+
+  // create an array with edges
+  var edges = [
+    {from: 1, to: 2},
+    {from: 1, to: 3},
+    {from: 10, to: 4},
+    {from: 2, to: 5},
+    {from: 6, to: 2},
+    {from: 7, to: 5},
+    {from: 8, to: 6},
+    {from: 9, to: 7},
+    {from: 10, to: 9}
+  ];
+
+  // create a network
+  var container = document.getElementById('mynetwork');
+  var data = {
+    nodes: nodes,
+    edges: edges
+  };
+  var options = {layout:{randomSeed:8}};
+  var network = new vis.Network(container, data, options);
+  network.on("selectNode", function(params) {
+      if (params.nodes.length == 1) {
+          if (network.isCluster(params.nodes[0]) == true) {
+              network.openCluster(params.nodes[0]);
+          }
+      }
+  });
+
+  function clusterByCid() {
+      network.setData(data);
+      var clusterOptionsByData = {
+          joinCondition:function(childOptions) {
+              return childOptions.cid == 1;
+          },
+          clusterNodeProperties: {id:'cidCluster', borderWidth:3, shape:'database'}
+      };
+      network.cluster(clusterOptionsByData);
+  }
+
+  function clusterByColor() {
+      network.setData(data);
+      var colors = ['orange','lime','DarkViolet'];
+      var clusterOptionsByData;
+      for (var i = 0; i < colors.length; i++) {
+          var color = colors[i];
+          clusterOptionsByData = {
+              joinCondition: function (childOptions) {
+                  return childOptions.color.background == color; // the color is fully defined in the node.
+              },
+              processProperties: function (clusterOptions, childNodes, childEdges) {
+                  var totalMass = 0;
+                  for (var i = 0; i < childNodes.length; i++) {
+                      totalMass += childNodes[i].mass;
+                  }
+                  clusterOptions.mass = totalMass;
+                  return clusterOptions;
+              },
+              clusterNodeProperties: {id: 'cluster:' + color, borderWidth: 3, shape: 'database', color:color, label:'color:' + color}
+          };
+          network.cluster(clusterOptionsByData);
+      }
+  }
+  function clusterByConnection() {
+      network.setData(data);
+      network.clusterByConnection(1)
+  }
+  function clusterOutliers() {
+      network.setData(data);
+      network.clusterOutliers();
+  }
+  function clusterByHubsize() {
+      network.setData(data);
+      var clusterOptionsByData = {
+          processProperties: function(clusterOptions, childNodes) {
+            clusterOptions.label = "[" + childNodes.length + "]";
+            return clusterOptions;
+          },
+          clusterNodeProperties: {borderWidth:3, shape:'box', font:{size:30}}
+      };
+      network.clusterByHubsize(undefined, clusterOptionsByData);
+  }
+}
 
 function vis_dep_test(depJson, loc) {
     // create an array with nodes
@@ -132,8 +292,6 @@ function vis_dep_test(depJson, loc) {
     var network = new vis.Network(container, data, options);
 
 }
-
-
 
 
 function draw(where) {

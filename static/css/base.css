@@ -133,35 +133,35 @@ nav form#search-en .input-group .form-control {
 }
 
 section#intro-header {
-    background-image: url(../images/background.jpg);
+    background-image: url(../img/background.jpg);
     background-size: cover;
 }
 
 section#Chinese {
-    background-image: url(../images/background-ch.jpg);
+    background-image: url(../img/background-ch.jpg);
     background-size: cover;
 }
 
 #ch-canvas {
-    height:800px;
+    height:600px;
 }
 
 section#German {
-    background-image: url(../images/background-de.jpg);
+    background-image: url(../img/background-de.jpg);
     background-size: cover;
 }
 
 #de-canvas {
-    height:800px;
+    height:600px;
 }
 
 section#English {
-    background-image: url(../images/background-lila.jpg);
+    background-image: url(../img/background-lila.jpg);
     background-size: cover;
 }
 
 #en-canvas {
-    height:800px;
+    height:600px;
 }
 
 section#intro-header .wrap-headline {
