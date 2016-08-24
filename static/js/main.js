@@ -19,6 +19,7 @@ $(document).ready(function() {
             var ch_txt = $(this).val()
             console.log('received user input:',ch_txt)
             var ch_net = ask_for_ch_ldg_net(ch_txt)
+
         };
     });
 
@@ -36,7 +37,8 @@ function ask_for_ch_ldg_net(ch_txt) {
             },
         success: function(data) {
             console.log(data);
-            vis_dep(data, 'ch-canvas'); 
+            vis_dep(data, 'ch-canvas');
+            test_vis_her('en-canvas')
             },
         error: function(jqXHR, textStatus, errorThrown) {
             alert(errorThrown);
@@ -160,7 +162,7 @@ function test_arrow(){
 
 }
 
-function test_vis_her(){
+function test_vis_her(where){
      // create an array with nodes
   var nodes = [
     {id: 1,  label: 'Node 1', color:'orange'},
@@ -172,7 +174,9 @@ function test_vis_her(){
     {id: 7,  label: 'cid = 1', cid:1, color:'DarkViolet', font:{color:'white'}},
     {id: 8,  label: 'cid = 1', cid:1, color:'lime'},
     {id: 9,  label: 'cid = 1', cid:1, color:'orange'},
-    {id: 10, label: 'cid = 1', cid:1, color:'lime'}
+    {id: 10, label: 'cid = 1', cid:1, color:'lime'},
+      {id: 11, label: 'cid = 2', cid:2, color:'lime'},
+      {id: 12, label: 'cid = 2', cid:2, color:'lime'}
   ];
 
   // create an array with edges
@@ -185,26 +189,87 @@ function test_vis_her(){
     {from: 7, to: 5},
     {from: 8, to: 6},
     {from: 9, to: 7},
-    {from: 10, to: 9}
+    {from: 10, to: 9},
+    {from: 9, to: 11},
+    {from: 11, to: 12}
+
   ];
 
-  // create a network
-  var container = document.getElementById('mynetwork');
-  var data = {
-    nodes: nodes,
-    edges: edges
-  };
-  var options = {layout:{randomSeed:8}};
-  var network = new vis.Network(container, data, options);
-  network.on("selectNode", function(params) {
-      if (params.nodes.length == 1) {
-          if (network.isCluster(params.nodes[0]) == true) {
-              network.openCluster(params.nodes[0]);
-          }
-      }
-  });
+    // create a network
+    var container = document.getElementById(where);
+    var data = {
+        nodes: nodes,
+        edges: edges
+    };
+    var options = {
+                    layout:{randomSeed:8},
+                    interaction:{
+                        navigationButtons: true,
+                        keyboard: true}};
+    var network = new vis.Network(container, data, options);
 
-  function clusterByCid() {
+    network.on("click", function(params) {
+        console.log(params)
+        if (params.nodes.length == 1) {
+            if (network.isCluster(params.nodes[0]) == true) {
+                network.openCluster(params.nodes[0]);
+                }
+            else {
+                var cid = get_cid_of_node(nodes, params.nodes[0]);
+                console.log(cid)
+                if (cid !== -1) {
+                    network.setData(data);
+                    var clusterOptionsByData = {
+                        joinCondition: function (childOptions) {
+                            return childOptions.cid == cid;
+                        },
+                        clusterNodeProperties: {id: 'cidCluster', label: 'Cluster:'+cid.toString(), borderWidth: 3, shape: 'big circle'}
+                    }
+                    network.cluster(clusterOptionsByData);
+                };
+            }
+        }
+
+        });
+
+    network.on("doubleClick", function(params) {
+        network.setData(data);
+        var cids = [1,2];
+        var clusterOptionsByData;
+        for (var i = 0; i < cids.length; i++) {
+            var cid = cids[i];
+            clusterOptionsByData = {
+                joinCondition: function (childOptions) {
+                    return childOptions.cid == cid; // the color is fully defined in the node.
+                    },
+                processProperties: function (clusterOptions, childNodes, childEdges) {
+                  var totalMass = 0;
+                  for (var i = 0; i < childNodes.length; i++) {
+                      totalMass += childNodes[i].mass;
+                  }
+                  clusterOptions.mass = totalMass;
+                  return clusterOptions;
+                },
+                clusterNodeProperties: {id: 'cluster:'+ cid, borderWidth: 3,
+                    shape: 'big circle', label:'cluster:'+ cid}
+            };
+            network.cluster(clusterOptionsByData);
+            }
+        });
+
+    function get_cid_of_node(nodes, nid){
+        for (var index in nodes){
+            var node = nodes[index];
+            if (node['id'] === nid){
+                return node['cid']
+            }
+        }
+        return -1;
+
+    }
+}
+
+function clusterByCid() {
       network.setData(data);
       var clusterOptionsByData = {
           joinCondition:function(childOptions) {
@@ -238,15 +303,15 @@ function test_vis_her(){
           network.cluster(clusterOptionsByData);
       }
   }
-  function clusterByConnection() {
+  function clusterByConnection(network) {
       network.setData(data);
       network.clusterByConnection(1)
   }
-  function clusterOutliers() {
+  function clusterOutliers(network) {
       network.setData(data);
       network.clusterOutliers();
   }
-  function clusterByHubsize() {
+  function clusterByHubsize(network) {
       network.setData(data);
       var clusterOptionsByData = {
           processProperties: function(clusterOptions, childNodes) {
@@ -257,7 +322,6 @@ function test_vis_her(){
       };
       network.clusterByHubsize(undefined, clusterOptionsByData);
   }
-}
 
 function vis_dep_test(depJson, loc) {
     // create an array with nodes
