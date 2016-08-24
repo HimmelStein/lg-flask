@@ -26,5 +26,17 @@ def make_net_from_chsnt():
     pprint(depGraph)
     return jsonify(depGraph)
 
+
+@app.route('/get_graph_net', methods=['GET', 'POST'])
+def get_graph_net():
+    Snt = request.args.get('snt')
+    Lan = request.args.get('lan')
+    if Lan == 'ch':
+        graphNet = ch_processer.get_graph_net(Snt)
+        pprint(graphNet)
+        return jsonify(graphNet)
+    return jsonify({})
+
+
 if __name__ == '__main__':
     app.run(debug=True)

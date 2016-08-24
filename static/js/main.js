@@ -17,8 +17,8 @@ $(document).ready(function() {
     $('#input-chinese').on('keyup',function(e){
         if(e.keyCode === 13 ) {
             var ch_txt = $(this).val()
-            console.log('received user input:',ch_txt)
-            var ch_net = ask_for_ch_ldg_net(ch_txt)
+            console.log('received user input:',ch_txt, 'lan:', 'ch')
+            var ch_net = get_graph_net(ch_txt, 'ch')
 
         };
     });
@@ -26,6 +26,28 @@ $(document).ready(function() {
 
 })
 
+function get_graph_net(txt, lan){
+    $.ajax({
+        type: "GET",
+        url: $SCRIPT_ROOT + "/get_graph_net",
+        contentType:"text/json; charset=utf-8",
+        data: {snt: txt, lan: lan},
+        beforeSend: function(){
+            },
+        success: function(data) {
+            console.log(data);
+            if (lan === 'ch'){
+                vis_her(data, 'ch-canvas')
+
+            }
+            //vis_dep(data, 'ch-canvas');
+            //test_vis_her('en-canvas')
+            },
+        error: function(jqXHR, textStatus, errorThrown) {
+            alert(errorThrown);
+            }
+    });
+}
 
 function ask_for_ch_ldg_net(ch_txt) {
 	$.ajax({
@@ -109,6 +131,195 @@ function vis_dep(depJson, loc) {
 }
 
 
+function vis_her(netJson, where){
+    // create an array with nodes
+    //OK!
+    var vis_nodes0 = [];
+	var vis_edges0 =[];
+    var gid_list = [];
+
+    for (var id in netJson) {
+        var node0 = {},
+            value = netJson[id];
+        if (id === "0"){
+
+            node0['id'] = 0;
+            node0['label'] = 'START';
+            node0["color"] = 'red';
+            node0['gid'] = 0;
+            vis_nodes0.push(node0);
+            for (var operatorName in value['deps']){
+                for (var toId in value['deps'][operatorName]){
+                    var edge0 = {};
+                    edge0['from'] = 0;
+                    edge0['to'] = value['deps'][operatorName][toId];
+                    edge0['arrows'] = 'to';
+                    edge0["label"] = 'root';
+                    edge0["color"] = 'red';
+                    vis_edges0.push(edge0);
+                }
+            }
+        }else{
+            node0['id'] = value['address'];
+            node0['label'] = value['address'];
+            node0['gid'] = value['gid'];
+            vis_nodes0.push(node0);
+            for (var operatorName in value['deps']){
+                for (var toId in value['deps'][operatorName]){
+                    var edge0 = {};
+                    edge0['from'] = value['address'];
+                    edge0['to'] = value['deps'][operatorName][toId];
+                    edge0['arrows'] = 'to';
+                    edge0["label"] = operatorName;
+                    vis_edges0.push(edge0);
+                }
+            }
+            var gid = value['gid'];
+            if (gid_list.indexOf(gid) === -1){
+                gid_list.push(gid)
+            }
+
+            for (var ldgId in value['ldg']){
+                var ldgValue = value['ldg'][ldgId]
+                var node0 = {}
+                if (ldgId === "-1"){
+                    node0['id'] = get_sub_id(gid, -1);
+                    node0['label'] = 'START-SUB';
+                    node0["color"] = '#ff00ff';
+                    node0['gid'] = gid;
+                    vis_nodes0.push(node0);
+
+                    var edge0 = {};
+                    edge0['from'] = value['address'];
+                    edge0['to'] =  get_sub_id(gid, -1);
+                    edge0['arrows'] = 'to';
+                    edge0["label"] = 'expand';
+                    edge0["color"] = '#ff00ff';
+                    vis_edges0.push(edge0);
+
+                    for (var rel in ldgValue['deps']){
+                        for (var toId in ldgValue['deps'][rel]){
+                            var edge0 = {};
+                            edge0['from'] = get_sub_id(gid, -1);
+                            edge0['to'] =  get_sub_id(gid, ldgValue['deps'][rel][toId]);
+                            edge0['arrows'] = 'to';
+                            edge0["label"] = 'root';
+                            edge0["color"] = '#ff00ff';
+                            vis_edges0.push(edge0);
+                        }
+                    }
+                }else{
+                    node0['id'] = get_sub_id(gid, ldgValue['address']);
+                    node0['label'] = ldgValue['address']+":"+ldgValue['word']+":"+ldgValue['tag'];
+                    node0['gid'] = gid;
+                    vis_nodes0.push(node0);
+                    for (var rel in ldgValue['deps']){
+                        for (var toId in ldgValue['deps'][rel]){
+                            var edge0 = {};
+                            edge0['from'] = get_sub_id(gid, ldgValue['address']);
+                            edge0['to'] =   get_sub_id(gid, ldgValue['deps'][rel][toId]);
+                            edge0['arrows'] = 'to';
+                            edge0["label"] = rel;
+                            vis_edges0.push(edge0);
+                        }
+                    }
+                }
+            }
+
+        }
+    }
+
+    var nodes = new vis.DataSet(vis_nodes0),
+		// create an array with edges
+        edges = new vis.DataSet(vis_edges0),
+        // create a network
+        container = document.getElementById(where),
+
+        data = {
+				nodes: nodes,
+				edges: edges
+             	},
+		options = {
+            interaction:{
+                        navigationButtons: true,
+                        keyboard: true}
+
+        },
+
+        network = new vis.Network(container, data, options);
+
+    network.on("click", function(params) {
+        console.log(params)
+        network.setData(data);
+        if (params.nodes.length == 1) {
+            if (network.isCluster(params.nodes[0]) == true) {
+                network.openCluster(params.nodes[0]);
+                }
+            else {
+
+                var gid = get_gid_of_node(nodes, params.nodes[0]);
+                console.log('on click',params.nodes[0], gid)
+                if (gid !== -1) {
+                    network.setData(data);
+                    var clusterOptionsByData = {
+                        joinCondition: function (childOptions) {
+                            console.log(childOptions);
+                            return childOptions.gid == gid;
+                        },
+                        clusterNodeProperties: {id: 'gidCluster', label: 'Cluster:'+gid.toString(), borderWidth: 3, shape: 'big circle'}
+                    }
+                    network.cluster(clusterOptionsByData);
+                };
+            }
+        }
+
+        });
+
+    network.on("doubleClick", function(params) {
+        network.setData(data);
+        var clusterOptionsByData;
+        for (var i = 0; i < gid_list.length; i++) {
+            var gid = gid_list[i];
+            clusterOptionsByData = {
+                joinCondition: function (childOptions) {
+                    return childOptions.gid == gid; // the color is fully defined in the node.
+                    },
+                processProperties: function (clusterOptions, childNodes, childEdges) {
+                  var totalMass = 0;
+                  for (var i = 0; i < childNodes.length; i++) {
+                      totalMass += childNodes[i].mass;
+                  }
+                  clusterOptions.mass = totalMass;
+                  return clusterOptions;
+                },
+                clusterNodeProperties: {id: 'cluster:'+ gid, borderWidth: 3,
+                    shape: 'big circle', label:'cluster:'+ gid}
+            };
+            network.cluster(clusterOptionsByData);
+            }
+        });
+
+    function get_gid_of_node(nodes, nid){
+        return retrieve_gid_from_id(nid);
+    }
+
+}
+
+
+function retrieve_gid_from_id(x){
+    if (x<1000){
+        return -1;
+    }
+    else{
+        y = x % 1000;
+        return (x - y)/1000;
+    }
+}
+
+function get_sub_id(a,b){
+    return 1000*a + b;
+}
+
 function test_arrow(){
     var nodes = null;
     var edges = null;
@@ -126,7 +337,7 @@ function test_arrow(){
 
       // create an array with nodes
       var nodes = [
-        {id: 1, label: 'Node 1'},
+        {id: (1,1), label: 'Node (1,1)'},
         {id: 2, label: 'Node 2'},
         {id: 3, label: 'Node 3'},
         {id: 4, label: 'Node 4'},
@@ -135,8 +346,8 @@ function test_arrow(){
 
       // create an array with edges
       var edges = new vis.DataSet([
-        {from: 1, to: 3},
-        {from: 1, to: 2},
+        {from: (1,1), to: 3},
+        {from: (1,1), to: 2},
         {from: 2, to: 4},
         {from: 2, to: 5}
       ]);

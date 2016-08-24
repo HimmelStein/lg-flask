@@ -11,11 +11,27 @@ from pprint import pprint
 class LgGraph(DependencyGraph):
     """
     all graphs are in the sub-class of nltk.parse.DependencyGraph!
+     {'address': 1,
+        'gid' : 0,
+        'ctag': 'PRO',
+        'deps': defaultdict(list, {}),
+        'feats': '3|Sg|Masc|Nom',
+        'head': 2,
+        'lemma': 'er',
+        'rel': 'subj',
+        'tag': 'PPER',
+        'word': 'Er'
+        }
     """
 
     def __init__(self):
         DependencyGraph.__init__(self)
+        self.nodes.update({
+            'gid':0
+        })
         self._snt = ''
+        self.gid = 0
+        # all nodes of the graph have the same gid, nodes of different graphs have different gid values
         self._lan = ''
         self._ldg = ''
         self._ldg_json = {}
@@ -99,6 +115,25 @@ class LgGraph(DependencyGraph):
     def ldgjson2nx(self, snt='', ldg=''):
         pass
 
+    def set_gid(self, gid):
+        self.gid = gid
+        for node in self.nodes.values():
+            node['gid'] = gid
+
+    def get_gid(self):
+        return self.gid
+
+    def is_applicable(self, operator):
+        pass
+
+    def apply_operator(self, operator):
+        """
+        till a fix point appears
+        :param operator:
+        :return:
+        """
+        pass
+    
     #
     # graph selector
     #

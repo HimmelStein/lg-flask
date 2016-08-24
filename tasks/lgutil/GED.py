@@ -13,6 +13,7 @@ produce a similarity metric in the range [0, ∞), where
 values closer to zero are more similar.
 """
 
+import networkx as nx
 
 def select_k(spectrum, minimum_energy = 0.9):
     running_total = 0.0
