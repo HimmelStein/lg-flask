@@ -35,8 +35,8 @@ function get_graph_net(txt, lan){
         beforeSend: function(){
             },
         success: function(data) {
-            console.log(data);
-            data = JSON.parse(data);
+            console.log('*',data);
+            //data = JSON.parse(data);
             if (lan === 'ch'){
                 vis_her(data, 'ch-canvas')
 
@@ -138,7 +138,7 @@ function vis_her(netJson, where){
     var vis_nodes0 = [];
 	var vis_edges0 =[];
     var gid_list = [];
-
+    console.log("+", netJson);
     for (var id in netJson) {
         var node0 = {},
             value = netJson[id];
@@ -163,6 +163,7 @@ function vis_her(netJson, where){
         }else{
             node0['id'] = value['address'];
             node0['label'] = 'G'+value['address'];
+            node0["color"] = 'green';
             node0['gid'] = value['gid'];
             vis_nodes0.push(node0);
             for (var operatorName in value['deps']){
@@ -267,7 +268,7 @@ function vis_her(netJson, where){
                             console.log(childOptions);
                             return childOptions.gid == gid;
                         },
-                        clusterNodeProperties: {id: 'gidCluster', label: 'Cluster:'+gid.toString(), borderWidth: 3, shape: 'big circle'}
+                        clusterNodeProperties: {id: 'gidCluster', label: 'Cluster:'+gid.toString(), color: 'green', borderWidth: 3, shape: 'big circle'}
                     }
                     network.cluster(clusterOptionsByData);
                 };
@@ -293,7 +294,7 @@ function vis_her(netJson, where){
                   clusterOptions.mass = totalMass;
                   return clusterOptions;
                 },
-                clusterNodeProperties: {id: 'cluster:'+ gid, borderWidth: 3,
+                clusterNodeProperties: {id: 'cluster:'+ gid, borderWidth: 3, color: 'green',
                     shape: 'big circle', label:'cluster:'+ gid}
             };
             network.cluster(clusterOptionsByData);

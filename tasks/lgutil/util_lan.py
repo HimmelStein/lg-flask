@@ -39,7 +39,7 @@ def remove_link_verb(graph, node, node_address):
         print('**', preds, subjs)
 
     if preds and subjs:
-        new_root = graph[preds[0]] 
+        new_root = graph[preds[0]]
         new_root['feature'] = defaultdict(list)
         new_root['feature']['root'] = [1]
         if node['lan'] == 'de':

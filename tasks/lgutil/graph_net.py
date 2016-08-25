@@ -113,6 +113,7 @@ class GraphNet(DependencyGraph):
         :param operator:
         :return:
         """
+        applied = False
         for graph in list(self.gen_ldg_in_net()):
             if graph.is_applicable(operator):
                 newGraph = graph.apply_operator(operator)
@@ -125,8 +126,26 @@ class GraphNet(DependencyGraph):
                 newGraphNet.set_key_address_same_as_gid(1, newGid)
                 newGraphNet.set_head(gid, address=newGid)
                 self.nodes[gid]['deps'][operator].append(newGid)
-
                 self.nodes.update(newGraphNet.nodes)
+                applied = True
+        return applied
+
+    def apply_all_graph_operators(self):
+        """
+        this function shall generate all possible graphs
+        applied = False
+        while True:
+            for operator in operator_dic:
+                applied = applied or self.apply_graph_operation(operator)
+            if not applied:
+                break
+        """
+        applied = False
+        while True:
+            for operator in LgGraph.operator_dic.keys():
+                applied = applied or self.apply_graph_operation(operator)
+            if not applied:
+                break
 
 
 if __name__ == '__main__':
