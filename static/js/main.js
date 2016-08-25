@@ -36,6 +36,7 @@ function get_graph_net(txt, lan){
             },
         success: function(data) {
             console.log(data);
+            data = JSON.parse(data);
             if (lan === 'ch'){
                 vis_her(data, 'ch-canvas')
 
@@ -154,14 +155,14 @@ function vis_her(netJson, where){
                     edge0['from'] = 0;
                     edge0['to'] = value['deps'][operatorName][toId];
                     edge0['arrows'] = 'to';
-                    edge0["label"] = 'root';
+                    edge0["label"] = 'net root';
                     edge0["color"] = 'red';
                     vis_edges0.push(edge0);
                 }
             }
         }else{
             node0['id'] = value['address'];
-            node0['label'] = value['address'];
+            node0['label'] = 'G'+value['address'];
             node0['gid'] = value['gid'];
             vis_nodes0.push(node0);
             for (var operatorName in value['deps']){
@@ -193,7 +194,7 @@ function vis_her(netJson, where){
                     edge0['from'] = value['address'];
                     edge0['to'] =  get_sub_id(gid, -1);
                     edge0['arrows'] = 'to';
-                    edge0["label"] = 'expand';
+                    edge0["label"] = 'init graph';
                     edge0["color"] = '#ff00ff';
                     vis_edges0.push(edge0);
 

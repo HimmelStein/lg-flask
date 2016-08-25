@@ -6,6 +6,11 @@ import copy
 from nltk.parse import DependencyGraph
 from collections import defaultdict
 from pprint import pprint
+try:
+    from . import util_lan as ulan
+except:
+    sys.path.append("/Users/tdong/git/lg-flask/tasks/lgutil")
+    import util_lan as ulan
 
 
 class LgGraph(DependencyGraph):
@@ -23,16 +28,19 @@ class LgGraph(DependencyGraph):
         'word': 'Er'
         }
     """
+    operator_dic = {'remove-link-verb': "_remove_link_verb"
+                    }
 
-    def __init__(self):
+    def __init__(self, lan=None):
         DependencyGraph.__init__(self)
         self.nodes.update({
-            'gid':0
+            'gid':0,
+            'lan':lan,
         })
         self._snt = ''
         self.gid = 0
         # all nodes of the graph have the same gid, nodes of different graphs have different gid values
-        self._lan = ''
+        self._lan = lan
         self._ldg = ''
         self._ldg_json = {}
         self._ldg_nx = ''
@@ -43,11 +51,20 @@ class LgGraph(DependencyGraph):
     def get_lan(self):
         return self._lan
 
+    def set_lan(self, lan):
+        self._lan = lan
+        for node in self.nodes.values():
+            node['lan'] = lan
+
+    def set_nodes(self, newNodes):
+        self.nodes = newNodes
+
     def get_ldg(self):
         return self._ldg 
 
     def set_conll(self, conllStr):
         DependencyGraph.__init__(self, conllStr)
+        self.set_lan(self._lan)
 
     def set_sample_snt_ldg_from_db(self, lan='', table='', num=-1):
         """
@@ -86,6 +103,7 @@ class LgGraph(DependencyGraph):
                 print(self._ldg)
             if self._ldg and lan in ['de', 'en']:
                 DependencyGraph.__init__(self, self._ldg) #
+                self.set_lan(self._lan)
         except psycopg2.DatabaseError:
             if con:
                 con.rollback()
@@ -124,74 +142,75 @@ class LgGraph(DependencyGraph):
         return self.gid
 
     def is_applicable(self, operator):
-        pass
+        if operator not in LgGraph.operator_dic.keys():
+            print(operator, ' not in operator list')
+            return False
+        if operator == 'remove-link-verb':
+            return self._has_link_verb()
+        return False
 
     def apply_operator(self, operator):
         """
         till a fix point appears
         :param operator:
-        :return:
+        :return: a new graph
         """
-        pass
+        assert operator in LgGraph.operator_dic.keys()
+        new_graph = self._remove_link_verb()
+
+        return new_graph
+
+
     
     #
     # graph selector
     #
-    def has_link_verb(self):
+    def _has_link_verb(self):
         """
         ch: '是'; 'de': 'sein'; 'en': 'be'
         :return:
         """
         for node in self.nodes.values():
-            if self._lan == 'de':
-                if node['lemma'] == 'sein' and node['tag']=='VAFIN' and node.get('feature',[])==[]:
-                    return True
-            elif self._lan == 'en':
-                return False
+            if ulan.is_link_verb_node(node):
+                return True
         return False
 
-    def get_link_verb_address(self):
+    def _get_link_verb_address(self):
         """
         ch: '是'; 'de': 'sein'; 'en': 'be'
         :return:
         """
         for node in self.nodes.values():
-            if self._lan == 'de':
-                if node['lemma'] == 'sein' and node['tag'] == 'VAFIN':
-                    yield node['address']
-        return
+            print(node, type(node))
+            if ulan.is_link_verb_node(node):
+                yield node['address']
 
-    def remove_link_verb(self):
+    def remove_node(self, address):
+        self.nodes[address]['deps'] = defaultdict(list)
+        del self.nodes[address]
+
+    def _remove_link_verb(self):
         """
         :return: graph
         """
-        if self.has_link_verb():
-            new_graph = copy.deepcopy(self.nodes)
-            if self._lan == 'de':
-                link_verb_address_gen = self.get_link_verb_address()
-                link_verb_address = next(link_verb_address_gen)
-                print(link_verb_address)
-                lk_node = new_graph[link_verb_address]
-                lk_node['feature'] = defaultdict(list)
-                lk_node['feature']['root'] = False
-                preds = lk_node['deps'].get('pred', [])
-                subjs = lk_node['deps'].get('subj', [])
-                if preds and subjs:
-                    new_root = new_graph[preds[0]]
-                    new_root['deps'].update({link_verb_address: subjs})
-                    new_root['feature'] = defaultdict(list)
-                    new_root['feature']['root'] = True
 
-                    new_graph[0]['deps']['root'] = preds
-            return new_graph
+        print('in _remove_link_verb')
+        new_graph = copy.deepcopy(self)
+        for link_verb_address in list(self._get_link_verb_address()):
+            print(link_verb_address)
+            lk_node = new_graph.nodes[link_verb_address]
+            new_nodes = ulan.remove_link_verb(new_graph.nodes, lk_node, link_verb_address)
+            new_graph.remove_node(link_verb_address)
+            new_graph.set_nodes(new_nodes)
+        return new_graph
 
     def recover_link_verb(self):
-
         pass
 
 
 if __name__ == '__main__':
 
-    LgGraphObj = LgGraph()
+    LgGraphObj = LgGraph(lan='de')
     LgGraphObj.set_sample_snt_ldg_from_db(lan='de', table='pons', num=0)
-    pprint(LgGraphObj.remove_link_verb())
+    ngraph = LgGraphObj.apply_operator('remove-link-verb')
+    pprint(ngraph)

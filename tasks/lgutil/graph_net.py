@@ -3,8 +3,15 @@
 from nltk.parse import DependencyGraph
 from collections import defaultdict
 import random
+import sys
+import copy
+from json import dumps
 from pprint import pprint
-from .lg_graph import LgGraph
+try:
+    from .lg_graph import LgGraph
+except:
+    sys.path.append("/Users/tdong/git/lg-flask/tasks/lgutil")
+    from .lg_graph import LgGraph
 
 
 class GraphNet(DependencyGraph):
@@ -57,6 +64,20 @@ class GraphNet(DependencyGraph):
         self.git_list.append(gid)
         return gid
 
+    def set_gid(self, gid):
+        for node in self.nodes.values():
+            node['gid'] = gid
+            if isinstance(node['ldg'], LgGraph):
+                node['ldg'].set_gid(gid)
+
+    def set_head(self, gid, address=1):
+        self.nodes[address]['head'] = gid
+
+    def set_key_address_same_as_gid(self, address, newGid):
+        if address in self.nodes.keys():
+            self.nodes[newGid] = copy.deepcopy(self.nodes[address])
+            self.nodes[newGid]['address'] = newGid
+            del self.nodes[address]
 
     def to_json(self):
         dic = {}
@@ -64,11 +85,20 @@ class GraphNet(DependencyGraph):
             dic[nodeId] = self.nodes[nodeId]
             if isinstance(dic[nodeId]['ldg'], LgGraph):
                 dic[nodeId]['ldg'] = dic[nodeId]['ldg'].ldg2json()
+        pprint(dic)
         return dic
+
+    def _remove_node(self, address):
+        del self.nodes[address]
+
+    def gen_ldg_in_net(self):
+        for node in self.nodes.values():
+            if isinstance(node['ldg'], LgGraph):
+                yield node['ldg']
 
     def apply_graph_operation(self, operator):
         """
-        apply operator to all nodes of self, except the TOP node
+        apply operator to all nodes with non-null 'ldg' key of self, except the TOP node
         for node in self.nodes.values():
             if node.applicatable(operator){
                 newNode = node.apply(operator)
@@ -83,22 +113,28 @@ class GraphNet(DependencyGraph):
         :param operator:
         :return:
         """
-        for node in self.nodes.values():
-            if node.is_applicable(operator):
-                newNode = node.apply_operator(operator)
+        for graph in list(self.gen_ldg_in_net()):
+            if graph.is_applicable(operator):
+                newGraph = graph.apply_operator(operator)
+                newGraphNet = GraphNet(ldg = newGraph)
+                print('newNodeInNet')
+                newGraphNet.remove_by_address(0)
                 newGid = self.get_next_gid()
-                newNode.set_gid(newGid)
-                gid = node.get_gid()
-                newNodeInNet = GraphNet(ldg = newNode)
-                newNodeInNet['head'] = gid
+                newGraphNet.set_gid(newGid)
+                gid = int(graph.get_gid())
+                newGraphNet.set_key_address_same_as_gid(1, newGid)
+                newGraphNet.set_head(gid, address=newGid)
                 self.nodes[gid]['deps'][operator].append(newGid)
-                self.nodes[newGid] = newNodeInNet
+
+                self.nodes.update(newGraphNet.nodes)
 
 
 if __name__ == '__main__':
     LgGraph0 = LgGraph()
     LgGraph0.set_sample_snt_ldg_from_db(lan='de', table='pons', num=0)
     GraphNet0 = GraphNet(ldg = LgGraph0)
-    LgGraph1 = LgGraph0.remove_link_verb()
+    GraphNet0.apply_graph_operation('remove-link-verb')
+
+    pprint(GraphNet0.to_json())
 
 
