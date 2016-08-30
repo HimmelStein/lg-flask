@@ -134,100 +134,95 @@ function vis_dep(depJson, loc) {
 
 function vis_her(netJson, where){
     // create an array with nodes
+    // netJson is the json data of GraphNet object
     //OK!
     var vis_nodes0 = [];
 	var vis_edges0 =[];
     var gid_list = [];
+    var nodeIdList = [];
     console.log("+", netJson);
     for (var id in netJson) {
         var node0 = {},
-            value = netJson[id];
-        if (id === "0"){
+            value0 = netJson[id],
+            gid = value0['gid'];
 
-            node0['id'] = 0;
-            node0['label'] = 'START';
-            node0["color"] = 'red';
-            node0['gid'] = 0;
+        node0['id'] = parseInt(id);// get_id(gid, id);
+        node0['label'] = "Start";
+        node0['color'] = 'green';
+        var node0 = make_node(parseInt(id), value0['lemma'], 0);
+        var index = nodeIdList.indexOf(node0['id']);
+        if (index === -1) {
             vis_nodes0.push(node0);
-            for (var operatorName in value['deps']){
-                for (var toId in value['deps'][operatorName]){
-                    var edge0 = {};
-                    edge0['from'] = 0;
-                    edge0['to'] = value['deps'][operatorName][toId];
-                    edge0['arrows'] = 'to';
-                    edge0["label"] = 'net root';
-                    edge0["color"] = 'red';
-                    vis_edges0.push(edge0);
-                }
-            }
-        }else{
-            node0['id'] = value['address'];
-            node0['label'] = 'G'+value['address'];
-            node0["color"] = 'green';
-            node0['gid'] = value['gid'];
-            vis_nodes0.push(node0);
-            for (var operatorName in value['deps']){
-                for (var toId in value['deps'][operatorName]){
-                    var edge0 = {};
-                    edge0['from'] = value['address'];
-                    edge0['to'] = value['deps'][operatorName][toId];
-                    edge0['arrows'] = 'to';
-                    edge0["label"] = operatorName;
-                    vis_edges0.push(edge0);
-                }
-            }
-            var gid = value['gid'];
-            if (gid_list.indexOf(gid) === -1){
-                gid_list.push(gid)
+            nodeIdList.push(node0['id']);
+        }
+
+        for (var rel in value0['deps']){
+            var address = value0['deps'][rel];
+            var node1 = {};
+            node1['id'] = parseInt(address); //get_id(gid, address);
+            var value1 = netJson[address];
+            node1['label'] = value1['lemma'];
+            node1['color'] = 'green';
+            var node1 = make_node(parseInt(address), value1['lemma'], value1['ER']);
+            var index = nodeIdList.indexOf(node1['id']);
+            if (index === -1) {
+                vis_nodes0.push(node1);
+                nodeIdList.push(node1['id']);
             }
 
-            for (var ldgId in value['ldg']){
-                var ldgValue = value['ldg'][ldgId]
-                var node0 = {}
-                if (ldgId === "-1"){
-                    node0['id'] = get_sub_id(gid, -1);
-                    node0['label'] = 'START-SUB';
-                    node0["color"] = '#ff00ff';
-                    node0['gid'] = gid;
-                    vis_nodes0.push(node0);
+            var edge = make_edge(node0, node1, rel);
+            vis_edges0.push(edge);
+        }
 
-                    var edge0 = {};
-                    edge0['from'] = value['address'];
-                    edge0['to'] =  get_sub_id(gid, -1);
-                    edge0['arrows'] = 'to';
-                    edge0["label"] = 'init graph';
-                    edge0["color"] = '#ff00ff';
-                    vis_edges0.push(edge0);
+        var ldgVaule = value0['ldg'],
+            node2 = {};
 
-                    for (var rel in ldgValue['deps']){
-                        for (var toId in ldgValue['deps'][rel]){
-                            var edge0 = {};
-                            edge0['from'] = get_sub_id(gid, -1);
-                            edge0['to'] =  get_sub_id(gid, ldgValue['deps'][rel][toId]);
-                            edge0['arrows'] = 'to';
-                            edge0["label"] = 'root';
-                            edge0["color"] = '#ff00ff';
-                            vis_edges0.push(edge0);
-                        }
+        if (_.size(ldgVaule) > 0){
+            for (var key in ldgVaule){
+                if (key === "-1"){
+                    node2['id'] = get_id(gid, key);
+                    node2['label'] = "Raw Graph";
+                    var node2 = make_node(get_id(gid, key), "Raw Graph", 0);
+                    var index = nodeIdList.indexOf(node2['id']);
+                    if (index === -1) {
+                        vis_nodes0.push(node2);
+                        nodeIdList.push(node2['id']);
                     }
-                }else{
-                    node0['id'] = get_sub_id(gid, ldgValue['address']);
-                    node0['label'] = ldgValue['address']+":"+ldgValue['word']+":"+ldgValue['tag'];
-                    node0['gid'] = gid;
-                    vis_nodes0.push(node0);
-                    for (var rel in ldgValue['deps']){
-                        for (var toId in ldgValue['deps'][rel]){
-                            var edge0 = {};
-                            edge0['from'] = get_sub_id(gid, ldgValue['address']);
-                            edge0['to'] =   get_sub_id(gid, ldgValue['deps'][rel][toId]);
-                            edge0['arrows'] = 'to';
-                            edge0["label"] = rel;
-                            vis_edges0.push(edge0);
-                        }
+
+                    var edge = make_edge(node0, node2, rel);
+                    vis_edges0.push(edge);
+                }
+
+                var ldgId = get_id(gid, key),
+                    ldgNode = ldgVaule[key],
+                    node3 = {};
+                node3['id'] = ldgId;
+                node3['label'] = ldgNode['word'];
+                var node3 = make_node(ldgId, ldgNode['word'], ldgNode['ER']);
+                var index = nodeIdList.indexOf(node3['id']);
+                if (index === -1) {
+                    vis_nodes0.push(node3);
+                    nodeIdList.push(node3['id']);
+                }
+
+                for (var rel0 in ldgNode['deps']) {
+                    for (var key4 in ldgNode['deps'][rel0]){
+                        var address4 = ldgNode['deps'][rel0][key4],
+                            node4 = {};
+                            node4['id'] = get_id(gid, address4);
+                            node4['label'] = ldgVaule[address4]['word'];
+                            var node4 = make_node(get_id(gid, address4), ldgVaule[address4]['word'], ldgVaule[address4]['ER']);
+                            var index = nodeIdList.indexOf(node4['id']);
+                            if (index === -1) {
+                                vis_nodes0.push(node4);
+                                nodeIdList.push(node4['id']);
+                            }
+
+                        var edge = make_edge(node3, node4, rel0);
+                        vis_edges0.push(edge);
                     }
                 }
             }
-
         }
     }
 
@@ -284,6 +279,8 @@ function vis_her(netJson, where){
             var gid = gid_list[i];
             clusterOptionsByData = {
                 joinCondition: function (childOptions) {
+                    var gid = get_gid_of_node(nodes, params.nodes[0]);
+                    console.log('on double click',params.nodes[0], gid)
                     return childOptions.gid == gid; // the color is fully defined in the node.
                     },
                 processProperties: function (clusterOptions, childNodes, childEdges) {
@@ -305,6 +302,31 @@ function vis_her(netJson, where){
         return retrieve_gid_from_id(nid);
     }
 
+    function make_edge(node0, node1, rel){
+        var edge = {};
+        edge['from'] = node0['id'] ;
+        edge['to'] = node1['id'];
+        edge['arrows'] = 'to';
+        edge["label"] = rel;
+        if (rel === 'ER') {
+            edge["color"] = 'red';
+        }else{
+            edge["color"] = '#ff00ff';
+        }
+        return edge
+    }
+
+    function make_node(id, label, erFlag){
+        var node = {};
+        node['id'] = parseInt(id);
+        node['label'] = label;
+        if (erFlag === 1) {
+            node['color'] = 'green'
+        }else{
+            node['color'] = 'rgba(30,30,30,0.2)';
+        }
+        return node;
+    }
 }
 
 
@@ -318,8 +340,8 @@ function retrieve_gid_from_id(x){
     }
 }
 
-function get_sub_id(a,b){
-    return 1000*a + b;
+function get_id(a,b){
+    return 1000*parseInt(a) + parseInt(b);
 }
 
 function test_arrow(){

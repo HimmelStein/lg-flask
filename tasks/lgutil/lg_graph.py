@@ -3,6 +3,7 @@
 import psycopg2
 import sys
 import copy
+import json
 from nltk.parse import DependencyGraph
 from collections import defaultdict
 from pprint import pprint
@@ -27,8 +28,25 @@ class LgGraph(DependencyGraph):
         'tag': 'PPER',
         'word': 'Er'
         }
+        {'address': None,
+                  'ctag': None,
+                  'deps': defaultdict(<class 'list'>, {'HED': [1]}),
+                  'feats': None,
+                  'head': None,
+                  'lan': 'ch',
+                  'lemma': None,
+                  'rel': None,
+                  'tag': None,
+                  'word': None}
     """
-    operator_dic = {'remove-link-verb': "_remove_link_verb"
+
+    content_word_list = ['v','n','r','a']
+    operator_dic = {'remove-link-verb': {"checker":"_has_link_verb",
+                                         "executor":"_remove_link_verb"},
+                    'remove-ch-quantitative-word': {"checker":"_has_ch_quantitative_word",
+                                                     "executor":"_remove_ch_quantitative_word"},
+                    'remove-leaf-with-pos-u':{"checker":"_has_leaf_with_pos_u",
+                                             "executor":"_remove_leaf_with_pos_u"}
                     }
 
     def __init__(self, lan=None):
@@ -36,6 +54,9 @@ class LgGraph(DependencyGraph):
         self.nodes.update({
             'gid':0,
             'lan':lan,
+            'address': -1,
+            'lemma':'',
+            'word': ''
         })
         self._snt = ''
         self.gid = 0
@@ -44,6 +65,14 @@ class LgGraph(DependencyGraph):
         self._ldg = ''
         self._ldg_json = {}
         self._ldg_nx = ''
+
+    def __repr__(self):
+        dict={}
+        dict['node'] = self.ldg2json()
+        dict['snt'] = self._snt
+        dict['gid'] = self.gid
+        dict['_lan'] = self._lan
+        return json.dumps(dict)
 
     def get_snt(self):
         return self._snt
@@ -99,8 +128,8 @@ class LgGraph(DependencyGraph):
                 self._lan = lan
                 self._snt = row[1]
                 self._ldg = row[2].replace('*', '\n')
-                print(self._snt)
-                print(self._ldg)
+                #print(self._snt)
+                #print(self._ldg)
             if self._ldg and lan in ['de', 'en']:
                 DependencyGraph.__init__(self, self._ldg) #
                 self.set_lan(self._lan)
@@ -136,18 +165,102 @@ class LgGraph(DependencyGraph):
     def set_gid(self, gid):
         self.gid = gid
         for node in self.nodes.values():
-            node['gid'] = gid
+            if node:
+                node['gid'] = gid
 
     def get_gid(self):
         return self.gid
+
+    def is_root(self, node):
+        if node['address'] is None:
+            return True
+        else:
+            return False
+
+    def is_frame_node(self, node):
+        if node:
+            if node['address'] is None:
+                return False
+            lan = node.get('lan', 'xlan')
+            if lan == 'ch':
+                return node.get('head', -100) == -1
+        return False
+
+    def get_all_functional_node_address(self):
+        result = []
+        for node in self.nodes.values():
+            if ulan.is_functional_node(node):
+                result.append(node['address'])
+        return result
+
+    def get_parent_content_node_address(self, node):
+        """
+        :param node:
+        :return:
+        """
+        if self.is_frame_node(node):
+            print('get_parent_content_node_address', node)
+            return None
+        upperNodeAddress = node['head']
+        while True:
+            if ulan.is_functional_node(self.nodes[upperNodeAddress]):
+                upperNodeAddress = self.nodes[upperNodeAddress]['head']
+            elif ulan.is_content_node(self.nodes[upperNodeAddress]):
+                return upperNodeAddress
+        return None
+
+    def establish_ER_relation_between(self, parentContentNodeAddress, address):
+        """
+        :param parentContentNodeAddress:
+        :param address:
+        :return:
+        """
+        print(self.nodes.keys(), address)
+        self.nodes[address]['head'] = parentContentNodeAddress
+        if 'ER' in self.nodes[parentContentNodeAddress]['deps'].keys():
+            self.nodes[parentContentNodeAddress]['deps']['ER'].append(address)
+        else:
+            self.nodes[parentContentNodeAddress]['deps']['ER'] = [address]
+
+    def remove_nodes(self, nodeAddress):
+        for node in list(self.nodes.values()):
+            for key in list(node['deps']):
+                if key != 'ER':
+                    del node['deps'][key]
+
+        for address in nodeAddress:
+            if address in list(self.nodes.keys()):
+                del self.nodes[address]
+
+    def get_ER_graph(self):
+        """
+        :return:
+        """
+        ERGraph = copy.deepcopy(self)
+        print('starting ERGraph', ERGraph)
+        functionalNodeAddress = ERGraph.get_all_functional_node_address()
+        for node in list(ERGraph.nodes.values()):
+            if self.is_root(node):
+                continue
+            if ulan.is_content_node(node):
+                node['ER'] = 1
+                parentContentNodeAddress = ERGraph.get_parent_content_node_address(node)
+                if parentContentNodeAddress is not None:
+                    print('parent content', node['address'], parentContentNodeAddress)
+                    ERGraph.establish_ER_relation_between(parentContentNodeAddress, node['address'])
+            else:
+                node['ER'] = 0
+                print('non content node', node)
+        #self.remove_nodes(functionalNodeAddress)
+        print('ending ERGraph', ERGraph)
+        return ERGraph
 
     def is_applicable(self, operator):
         if operator not in LgGraph.operator_dic.keys():
             print(operator, ' not in operator list')
             return False
-        if operator == 'remove-link-verb':
-            return self._has_link_verb()
-        return False
+        checker = LgGraph.operator_dic[operator]['checker']
+        return getattr(self, checker)()
 
     def apply_operator(self, operator):
         """
@@ -156,14 +269,14 @@ class LgGraph(DependencyGraph):
         :return: a new graph
         """
         assert operator in LgGraph.operator_dic.keys()
-        new_graph = self._remove_link_verb()
-
-        return new_graph
+        executor = LgGraph.operator_dic[operator]['executor']
+        return getattr(self, executor)()
 
 
     
     #
     # graph selector
+    # remove_link_verb
     #
     def _has_link_verb(self):
         """
@@ -193,24 +306,73 @@ class LgGraph(DependencyGraph):
         """
         :return: graph
         """
-
         print('in _remove_link_verb')
-        new_graph = copy.deepcopy(self)
+        newGraph = copy.deepcopy(self)
         for link_verb_address in list(self._get_link_verb_address()):
             print(link_verb_address)
-            lk_node = new_graph.nodes[link_verb_address]
-            new_nodes = ulan.remove_link_verb(new_graph.nodes, lk_node, link_verb_address)
-            new_graph.remove_node(link_verb_address)
-            new_graph.set_nodes(new_nodes)
-        return new_graph
+            lk_node = newGraph.nodes[link_verb_address]
+            new_nodes = ulan.remove_link_verb(newGraph.nodes, lk_node, link_verb_address)
+            newGraph.remove_node(link_verb_address)
+            newGraph.set_nodes(new_nodes)
+        return newGraph
 
     def recover_link_verb(self):
         pass
 
+    #
+    # remove_ch_quantitative_word
+    #
+
+    def _has_ch_quantitative_word(self):
+        for node in self.nodes.values():
+            if ulan.is_ch_quantitative_word(node, patt = {'ch' : {'tag': 'q'}}):
+                return True
+        return False
+
+    def _get_ch_quantitative_word_address(self):
+        for node in self.nodes.values():
+            if ulan.is_ch_quantitative_word(node, patt = {'ch' : {'tag': 'q'}}):
+                yield node['address']
+
+    def _remove_ch_quantitative_word(self):
+        print('in _remove_ch_quantitative_word')
+        newGraph = copy.deepcopy(self)
+        for qword_address in list(self._get_ch_quantitative_word_address()):
+            qword_node = newGraph.nodes[qword_address]
+            new_nodes = ulan.remove_ch_quantitative_word(newGraph.nodes, qword_node, qword_address)
+            newGraph.remove_node(qword_address)
+            newGraph.set_nodes(new_nodes)
+        return newGraph
+
+    #
+    # remove_leaf_with_pos_u
+    #
+    def _has_leaf_with_pos_u(self):
+        for node in self.nodes.values():
+            if ulan.is_leaf_with_pos_u(node):
+                return True
+        return False
+
+    def _get_leaf_with_pos_u_address(self):
+        for node in self.nodes.values():
+            if ulan.is_leaf_with_pos_u(node):
+                yield node['address']
+
+    def _remove_leaf_with_pos_u(self):
+        print('in _remove_leaf_with_pos_u')
+        newGraph = copy.deepcopy(self)
+        for qword_address in list(self._get_leaf_with_pos_u_address()):
+            qword_node = newGraph.nodes[qword_address]
+            new_nodes = ulan.remove_leaf_with_pos_u(newGraph.nodes, qword_node, qword_address)
+            newGraph.remove_node(qword_address)
+            newGraph.set_nodes(new_nodes)
+        return newGraph
 
 if __name__ == '__main__':
 
-    LgGraphObj = LgGraph(lan='de')
-    LgGraphObj.set_sample_snt_ldg_from_db(lan='de', table='pons', num=0)
-    ngraph = LgGraphObj.apply_operator('remove-link-verb')
-    pprint(ngraph)
+    LgGraphObj = LgGraph(lan='ch')
+    LgGraphObj.set_sample_snt_ldg_from_db(lan='ch', table='pons', num=1)
+    #ngraph = LgGraphObj.apply_operator('remove-link-verb')
+    print(LgGraphObj)
+    ergraph = LgGraphObj.get_ER_graph()
+    print(ergraph)

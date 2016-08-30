@@ -33,6 +33,7 @@ def get_graph_net():
     Lan = request.args.get('lan')
     if Lan == 'ch':
         graphNet = ch_processer.get_graph_net(Snt)
+        pprint(graphNet)
         return jsonify(graphNet)
     return jsonify({})
 

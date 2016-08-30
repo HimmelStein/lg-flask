@@ -25,8 +25,12 @@ def get_graph_net(chsntOrId, table='PONS'):
         LgGraphObj = LgGraph(lan='ch')
         LgGraphObj.set_conll(raw_ldg_str.replace('*', '\n').replace('_ _ _', '_ _'))
         GraphNetObj = GraphNet(ldg = LgGraphObj)
-        GraphNetObj.apply_graph_operation('remove-link-verb')
-
+        GraphNetObj.change_to_ER_graph()
+        #GraphNetObj.fork_ldg(ldg = LgGraphObj)
+        #GraphNetObj.fork_ldg()
+        #GraphNetObj.apply_graph_operation('remove-link-verb')
+        #GraphNetObj.apply_all_graph_operators()
+        #GraphNetObj.gen_ER_graph()
         return GraphNetObj.to_json()
     else:
         pass
