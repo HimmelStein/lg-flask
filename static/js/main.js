@@ -6,6 +6,7 @@
 
 $(document).ready(function() {
 
+    var table = 'a PONS';
 
     $(".dropdown-menu li a").click(function(){
 
@@ -18,28 +19,53 @@ $(document).ready(function() {
         if(e.keyCode === 13 ) {
             var ch_txt = $(this).val()
             console.log('received user input:',ch_txt, 'lan:', 'ch')
-            var ch_net = get_graph_net(ch_txt, 'ch')
+            var ch_net = get_graph_net(table, ch_txt, 'ch')
 
         };
     });
 
+     $('#input-german').on('keyup',function(e){
+        if(e.keyCode === 13 ) {
+            var de_txt = $(this).val()
+            console.log('received user input:',de_txt, 'lan:', 'de')
+            var de_net = get_graph_net(table, de_txt, 'de')
+
+        };
+    });
+
+    $(".dropdown-menu li a").click(function(){
+        $(this).parents(".navbar-header").find('.lan-label').text($(this).text());
+        $(this).parents(".navbar-header").find('.lan-label').val($(this).text());
+        table = $(this).text();
+});
+
 
 })
 
-function get_graph_net(txt, lan){
+
+
+function get_graph_net(table, txt, lan){
     $.ajax({
         type: "GET",
         url: $SCRIPT_ROOT + "/get_graph_net",
         contentType:"text/json; charset=utf-8",
-        data: {snt: txt, lan: lan},
+        data: {table: table, snt: txt, lan: lan},
         beforeSend: function(){
             },
         success: function(data) {
             console.log('*',data);
             //data = JSON.parse(data);
             if (lan === 'ch'){
-                vis_her(data, 'ch-canvas')
-
+                var snt = data['snt'],
+                    graph = data['graph'];
+                $('#input-chinese').val(snt);
+                vis_her(graph, 'ch-canvas')
+            }
+            if (lan === 'de'){
+                var snt = data['snt'],
+                    graph = data['graph'];
+                $('#input-german').val(snt);
+                vis_her(graph, 'de-canvas')
             }
             //vis_dep(data, 'ch-canvas');
             //test_vis_her('en-canvas')

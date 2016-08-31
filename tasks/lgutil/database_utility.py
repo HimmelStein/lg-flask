@@ -17,20 +17,25 @@ db = 'language_graph'
 dbuser = 'postgres'
 
 
-def get_raw_ldg_with_id(id, table=''):
+def get_raw_ldg_with_id(id, table='', lan='ch'):
     global table_kdic
     try:
         con = psycopg2.connect(host='localhost', database=db, user=dbuser)
         print('connecting postgre')
         cur = con.cursor()
-        sql_str = "SELECT ch_ldg FROM "+ table + " where id="+str(id)
+        if table == 'PONS' and lan == 'ch':
+            sql_str = "SELECT ch_snt, ch_ldg FROM "+ table + " where id="+str(id)
+        elif table == 'PONS' and lan == 'de':
+            sql_str = "SELECT de_snt, de_ldg FROM "+ table + " where id="+str(id)
         print(sql_str)
         cur.execute(sql_str)
         con.commit()
         rows = cur.fetchall()
         for row in rows:
             print('row', row[0])
-            return row[0]
+            print(row[1].replace('*', '\n'))
+            return row[0], row[1]
+
     except psycopg2.DatabaseError:
         if con:
             con.rollback()

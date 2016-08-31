@@ -2,13 +2,19 @@
 from collections import defaultdict
 from nltk.parse import DependencyGraph
 
-chContentTagList = ['v','n','r','a','m','ns', 'nt', 'nz']
+chContentTagList = ['v','n', 'ns', 'nt', 'nz', 'nd']
+#spatialTagList = ['v','n','r','a','m','ns', 'nt', 'nz', 'nd']
+
+deContentTagList = ['PPER', 'VAFIN','NN', 'VVPP']
+
 
 def is_functional_node(node):
     tag = node.get('tag', 'x')
     lan = node.get('lan', 'xlan')
-    if lan == 'ch':
+    if lan == 'ch' and tag is not None:
         return tag not in chContentTagList
+    elif lan == 'de' and tag != 'TOP':
+        return tag not in deContentTagList
     return False
 
 
@@ -19,12 +25,13 @@ def is_content_node(node):
         return True
     if lan == 'ch':
         return tag in chContentTagList
+    elif lan == 'de':
+        return tag in deContentTagList
     return True
 
 
 def is_link_verb_node(node):
     """
-
     :param node:
     :return:
     """

@@ -3,6 +3,8 @@ from flask import Flask, jsonify, render_template, request
 from flask.ext.sqlalchemy import SQLAlchemy
 from pprint import pprint
 import tasks.chinese.clgnet as ch_processer
+import tasks.german.dlgnet as de_processer
+import tasks.english.elgnet as en_processer
 
 app = Flask(__name__)
 app.config.from_object(os.environ['APP_SETTINGS'])
@@ -29,10 +31,20 @@ def make_net_from_chsnt():
 
 @app.route('/get_graph_net', methods=['GET', 'POST'])
 def get_graph_net():
+    Table = request.args.get('table').split()[1]
     Snt = request.args.get('snt')
     Lan = request.args.get('lan')
+    print('Table', Table)
     if Lan == 'ch':
-        graphNet = ch_processer.get_graph_net(Snt)
+        snt, graphNet = ch_processer.get_graph_net(Snt)
+        pprint(graphNet)
+        return jsonify({'snt': snt, 'graph': graphNet})
+    elif Lan == 'de':
+        snt, graphNet = de_processer.get_graph_net(Snt)
+        pprint(graphNet)
+        return jsonify({'snt': snt, 'graph': graphNet})
+    elif Lan == 'en':
+        graphNet = en_processer.get_graph_net(Snt)
         pprint(graphNet)
         return jsonify(graphNet)
     return jsonify({})

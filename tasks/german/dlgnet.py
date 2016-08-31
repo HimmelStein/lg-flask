@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from json import dumps
+import copy
 from ..lgutil import database_utility as dbutil
 from ..lgutil.lg_graph import LgGraph
 from ..lgutil.graph_net import GraphNet
@@ -18,13 +19,25 @@ def get_raw_ldg(chsntOrId, table='PONS'):
         pass
 
 
-def get_graph_net(chsntOrId, table='PONS'):
-    if chsntOrId.isdigit():
-        id = int(chsntOrId)
-        snt, raw_ldg_str = dbutil.get_raw_ldg_with_id(id, table=table)
-        raw_ldg_str = raw_ldg_str.replace('*', '\n').replace('_ _ _', '_ _')
-        LgGraphObj = LgGraph(lan='ch')
-        LgGraphObj.set_conll(raw_ldg_str)
+def get_graph_net(desntOrId, table='PONS'):
+    if desntOrId.isdigit():
+        id = int(desntOrId)
+        snt, raw_ldg_str = dbutil.get_raw_ldg_with_id(id, table=table, lan='de')
+        LgGraphObj = LgGraph(lan='de')
+        LgGraphObj.set_conll(raw_ldg_str.replace('*', '\n').replace('_ _ _', '_ _'))
+
+        node0 = copy.deepcopy(LgGraphObj.nodes[0])
+        node0.update(
+            {'address': None,
+             'ctag' : None,
+             'tag': None}
+        )
+        LgGraphObj.nodes[-1] = node0
+        del LgGraphObj.nodes[0]
+        for node in LgGraphObj.nodes.values():
+            if node['head'] == 0:
+                node['head'] = -1
+
         GraphNetObj = GraphNet(ldg = LgGraphObj)
         GraphNetObj.change_to_ER_graph()
         #GraphNetObj.fork_ldg(ldg = LgGraphObj)

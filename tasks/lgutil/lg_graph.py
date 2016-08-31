@@ -181,9 +181,9 @@ class LgGraph(DependencyGraph):
         if node:
             if node['address'] is None:
                 return False
-            lan = node.get('lan', 'xlan')
-            if lan == 'ch':
-                return node.get('head', -100) == -1
+            #lan = node.get('lan', 'xlan')
+            #if lan == 'ch':
+            return node.get('head', -100) == -1
         return False
 
     def get_all_functional_node_address(self):
@@ -217,7 +217,7 @@ class LgGraph(DependencyGraph):
         """
         print(self.nodes.keys(), address)
         self.nodes[address]['head'] = parentContentNodeAddress
-        if 'ER' in self.nodes[parentContentNodeAddress]['deps'].keys():
+        if 'ER' in self.nodes[parentContentNodeAddress]['deps'].keys() and not self.is_root(self.nodes[parentContentNodeAddress]):
             self.nodes[parentContentNodeAddress]['deps']['ER'].append(address)
         else:
             self.nodes[parentContentNodeAddress]['deps']['ER'] = [address]
@@ -238,7 +238,8 @@ class LgGraph(DependencyGraph):
         """
         ERGraph = copy.deepcopy(self)
         print('starting ERGraph', ERGraph)
-        functionalNodeAddress = ERGraph.get_all_functional_node_address()
+        #functionalNodeAddress = ERGraph.get_all_functional_node_address()
+        #print('all func', functionalNodeAddress)
         for node in list(ERGraph.nodes.values()):
             if self.is_root(node):
                 continue
@@ -252,6 +253,9 @@ class LgGraph(DependencyGraph):
                 node['ER'] = 0
                 print('non content node', node)
         #self.remove_nodes(functionalNodeAddress)
+        if None in ERGraph.nodes.keys():
+            del ERGraph.nodes[None]
+
         print('ending ERGraph', ERGraph)
         return ERGraph
 
