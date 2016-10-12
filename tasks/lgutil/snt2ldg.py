@@ -31,6 +31,34 @@ dep_parser_de = StanfordDependencyParser(model_path = model_de_path)
 dep_parser_cn = StanfordDependencyParser(model_path = model_cn_path)
 
 
+def get_ch_ldg(snt, ch_parser='hit', format='conll'):
+    """
+    :param snt: one sentence
+    :param ch_parser:
+    :param format: output format
+    :return:
+    """
+    time.sleep(5)
+    import urllib.request
+    import urllib.parse
+    from urllib.request import urlopen
+    from urllib.parse import quote
+    url_get_base = "http://api.ltp-cloud.com/analysis/?"
+    api_key = "74x4c7F3JiRepP6isevdShbXmhrLJE8RJWvnsZPy"
+    # api_key = "47b7P5F0pQvs8b3MUSXAtAqu6pCZsXYKndEXoise"
+    format = "conll"
+    pattern = "dp"
+    url = url_get_base + 'api_key=' + api_key + '&text=' + quote(
+        snt) + '&format=' + format + '&pattern=' + pattern
+    req = urllib.request.Request(url)
+    with urllib.request.urlopen(req) as response:
+        content = ''
+        for line in response:
+            line = line.decode('utf8')  # Decoding the binary data to text.
+            content = content + line
+    return content
+
+
 def get_dep_str(snt, lan='en', ch_parser = 'hit', de_parser='parzu'):
     """
     for german sentence, we use parzu, which is much better than stanford parser
@@ -41,25 +69,7 @@ def get_dep_str(snt, lan='en', ch_parser = 'hit', de_parser='parzu'):
     """
     if lan == 'ch':
         if ch_parser == 'hit':
-            time.sleep(5)
-            import urllib.request
-            import urllib.parse
-            from urllib.request import urlopen
-            from urllib.parse import quote
-            url_get_base = "http://api.ltp-cloud.com/analysis/?"
-            api_key = "74x4c7F3JiRepP6isevdShbXmhrLJE8RJWvnsZPy"
-            #api_key = "47b7P5F0pQvs8b3MUSXAtAqu6pCZsXYKndEXoise"
-            format = "conll"
-            pattern = "dp"
-            url = url_get_base + 'api_key=' + api_key + '&text=' + quote(
-                snt) + '&format=' + format + '&pattern=' + pattern
-            req = urllib.request.Request(url)
-            with urllib.request.urlopen(req) as response:
-                content = ''
-                for line in response:
-                    line = line.decode('utf8')  # Decoding the binary data to text.
-                    content = content + line
-            return content
+            return get_ch_ldg(snt, ch_parser='hit')
         else:
             snt = str(snt)
             ch_seg_snt = segmenter.segment(snt).strip('\n').strip('。')
@@ -118,11 +128,11 @@ if __name__ == "__main__":
     str_ch2 = '他借了几本书。'
     str_de1 = 'Jenes Mädchen ist sehr hübsch.'
     str_en1 = 'In other words, counterfactual thinking influences how satisfied each athlete feels.'
-    dep_str = get_dep_str(str_ch1, lan='ch', ch_parser='hit')
-    print(dep_str)
+    #dep_str = get_dep_str(str_ch1, lan='ch', ch_parser='hit')
+    #print(dep_str)
     #dep_str = get_dep_str(str_en1, lan='en')
     #print(dep_str)
-    #dep_str = get_dep_str(str_de1, lan='de')
-    #print(dep_str)
+    dep_str = get_dep_str(str_de1, lan='de',de_parser='parzu')
+    print(dep_str)
 
 

@@ -1,0 +1,5 @@
+this folder contains scripts for the pro-processing of word2vec
+specific:
+1. given the whole text of Chinese/English/German Bible,
+2. create a csv file for each bible, each line is a single sentence
+

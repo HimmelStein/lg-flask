@@ -1,0 +1,36 @@
+1. Input to the system: a sentence in language L
+   output of the system: a SDG in following formats: json, graphic
+
+2. how does the system work?
+
+- get the LDG of the input sentence
+
+- computing the fixed-point of the LDG, based on transformation rules
+
+
+- moving functional nodes into edges, or features of parent node.
+
+
+
+3. how shall we get transformation rules?
+
+-  input
+a. fixed phrases
+b. grammatical rules
+
+- automatic learning
+there is a set of sample sentences S0.
+
+--- fixed phrases
+search a sample sentence containing a fixed phrase
+
+--- grammatical rules
+search a sample sentence using a grammatical rule
+
+not only... but also ...
+
+
+
+4. how shall we check whether a graph is a SDG?
+
+- checking node

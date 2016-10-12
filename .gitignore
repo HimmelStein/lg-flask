@@ -3,11 +3,16 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# files shall be ignored
+*.ign
+
 # C extensions
 *.so
 
 # Distribution / packaging
 .Python
+data/
+data_back/
 env/
 build/
 develop-eggs/
